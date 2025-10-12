@@ -1,0 +1,12 @@
+RIK-Fail-Safe Learning Report
+========================================
+
+📅 Generated: 2025-10-12 15:12:04
+
+🧠 Re-run task with safe defaults
+   • Uses: 3
+   • Successes: 3
+   • Success Rate: 100.0%
+   • Avg Confidence: 0.783
+
+📊 Learning Chart: /Users/erikgalardi/Desktop/rik_v5/rik_fail_safe/integration_examples/reports/learning_progress.png

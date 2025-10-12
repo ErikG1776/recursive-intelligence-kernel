@@ -1,0 +1,9 @@
+{
+  "labelfirstname": "FirstName",
+  "labellastname": "LastName",
+  "labelcompanyname": "CompanyName",
+  "labelrole": "Role in Company",
+  "labeladdress": "Address",
+  "labelemail": "Email",
+  "labelphone": "Phone"
+}

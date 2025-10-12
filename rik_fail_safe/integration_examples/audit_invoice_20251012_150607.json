@@ -1,0 +1,4 @@
+{"timestamp": "2025-10-12T15:06:07.521970", "event": "START", "message": "Invoice Extraction Challenge initialized", "data": {}}
+{"timestamp": "2025-10-12T15:06:39.693488", "event": "EXCEPTION", "message": "Timed out waiting for Start button", "data": {}}
+{"timestamp": "2025-10-12T15:06:39.694076", "event": "INFO", "message": "Keeping browser open for 20 seconds to verify upload", "data": {}}
+{"timestamp": "2025-10-12T15:06:59.919947", "event": "END", "message": "Invoice Extraction Challenge completed", "data": {}}
