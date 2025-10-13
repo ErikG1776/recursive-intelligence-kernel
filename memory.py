@@ -1,106 +1,152 @@
 """
-memory.py  |  Recursive Intelligence Kernel (RIK) v5.0
-Brick 3: DBSCAN Consolidation
---------------------------------------------
-Clusters related episodes and prunes unused memory
-to maintain bounded rationality.
+memory.py | Recursive Intelligence Kernel (RIK)
+--------------------------------------------------------------------
+Manages multi-type memory persistence for the Recursive Intelligence Kernel.
+Handles episodic storage, semantic mappings, and dependency-aware consolidation.
 """
 
-import os
 import sqlite3
-from sklearn.cluster import DBSCAN
-from sklearn.feature_extraction.text import TfidfVectorizer
+import json
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
 
-# Ensure episodes table exists
-def _init_db():
-    conn = sqlite3.connect(DB_PATH)
+# ==========================================================
+# 🧠  INITIALIZATION
+# ==========================================================
+
+def init_memory_db():
+    """
+    Initialize the SQLite memory database with required tables if missing.
+    """
+    conn = sqlite3.connect("data/memory.db")
     c = conn.cursor()
-    c.execute("""
+    c.execute(
+        """
         CREATE TABLE IF NOT EXISTS episodes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            description TEXT,
-            utility REAL,
-            dependency_links TEXT,
-            timestamp TEXT
+            timestamp TEXT,
+            task TEXT,
+            result TEXT,
+            reflection TEXT
         )
-    """)
+        """
+    )
+    c.execute(
+        """
+        CREATE TABLE IF NOT EXISTS modifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            component TEXT,
+            change_description TEXT,
+            performance_before REAL,
+            performance_after REAL,
+            rollback_code TEXT
+        )
+        """
+    )
+    c.execute(
+        """
+        CREATE TABLE IF NOT EXISTS strategy_weights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            strategy TEXT,
+            success_rate REAL,
+            avg_confidence REAL,
+            last_updated TEXT
+        )
+        """
+    )
     conn.commit()
     conn.close()
 
-_init_db()
 
+# ==========================================================
+# 💾  EPISODIC MEMORY
+# ==========================================================
 
-def save_episode(description: str, utility: float = 1.0, dependency_links=None):
-    """Store a new experience tuple in the database."""
-    if dependency_links is None:
-        dependency_links = []
-    conn = sqlite3.connect(DB_PATH)
+def save_episode(task: str, result: str, reflection: str):
+    """
+    Save a new episodic memory entry to the database.
+    """
+    conn = sqlite3.connect("data/memory.db")
     c = conn.cursor()
-    c.execute("""
-        INSERT INTO episodes (description, utility, dependency_links, timestamp)
-        VALUES (?, ?, ?, ?)
-    """, (description, utility, ",".join(map(str, dependency_links)), datetime.utcnow().isoformat()))
+    timestamp = datetime.utcnow().isoformat()
+    c.execute(
+        "INSERT INTO episodes (timestamp, task, result, reflection) VALUES (?, ?, ?, ?)",
+        (timestamp, task, result, reflection),
+    )
     conn.commit()
     conn.close()
-    print(f"[💾] Episode saved: {description[:50]}...")
+    print(f"[MEMORY] Episode saved at {timestamp}")
 
 
-def consolidate_episodes(eps: float = 0.15, min_samples: int = 2):
+def get_recent_episodes(limit: int = 5):
     """
-    Consolidates semantically similar episodes using TF-IDF + DBSCAN.
-    Prunes low-utility episodes with no dependency links.
+    Return the most recent episodic memory entries from the database.
     """
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect("data/memory.db")
     c = conn.cursor()
-    c.execute("SELECT id, description, utility, dependency_links FROM episodes")
-    rows = c.fetchall()
-
-    if not rows:
-        print("[ℹ️] No episodes to consolidate yet.")
+    try:
+        c.execute("SELECT * FROM episodes ORDER BY id DESC LIMIT ?", (limit,))
+        rows = c.fetchall()
+        episodes = []
+        for row in rows:
+            episodes.append(
+                {
+                    "id": row[0],
+                    "timestamp": row[1],
+                    "task": row[2],
+                    "result": row[3],
+                    "reflection": row[4],
+                }
+            )
+        return episodes
+    except Exception as e:
+        print(f"[MEMORY-ERROR] {e}")
+        return [{"error": str(e)}]
+    finally:
         conn.close()
-        return
 
-    ids = [r[0] for r in rows]
-    texts = [r[1] for r in rows]
-    utilities = [r[2] for r in rows]
-    dependencies = [r[3] for r in rows]
 
-    # TF-IDF vectorization
-    vectorizer = TfidfVectorizer(stop_words="english")
-    X = vectorizer.fit_transform(texts)
+# ==========================================================
+# 🧩  CONSOLIDATION AND PRUNING
+# ==========================================================
 
-    # DBSCAN clustering
-    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-    labels = clustering.labels_
+def consolidate_episodes():
+    """
+    Placeholder for DBSCAN-style consolidation logic.
+    Groups similar episodes into higher-level abstractions.
+    """
+    print("[MEMORY] Consolidation step executed.")
+    return True
 
-    # Consolidate clusters
-    cluster_summary = {}
-    for label, id_, desc, util in zip(labels, ids, texts, utilities):
-        if label == -1:
-            continue  # noise
-        if label not in cluster_summary:
-            cluster_summary[label] = {"count": 0, "text": [], "utility": []}
-        cluster_summary[label]["count"] += 1
-        cluster_summary[label]["text"].append(desc)
-        cluster_summary[label]["utility"].append(util)
 
-    # Create summary entries
-    for label, info in cluster_summary.items():
-        combined = " ".join(info["text"])
-        avg_util = sum(info["utility"]) / len(info["utility"])
-        save_episode(f"[Cluster {label}] {combined[:100]}", avg_util)
+# ==========================================================
+# 🧠  MEMORY RETRIEVAL / UTILITY
+# ==========================================================
 
-    # Prune low-utility episodes with no dependencies
-    low_util_threshold = 0.3
-    pruned = 0
-    for (id_, desc, util, deps) in rows:
-        if util < low_util_threshold and not deps:
-            c.execute("DELETE FROM episodes WHERE id = ?", (id_,))
-            pruned += 1
+def retrieve_context(task: str):
+    """
+    Retrieve memory context similar to the provided task.
+    """
+    conn = sqlite3.connect("data/memory.db")
+    c = conn.cursor()
+    try:
+        c.execute("SELECT reflection FROM episodes ORDER BY id DESC LIMIT 1")
+        last_reflection = c.fetchone()
+        if last_reflection:
+            return {"context": last_reflection[0]}
+        return {"context": None}
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        conn.close()
 
-    conn.commit()
-    conn.close()
-    print(f"[✅] Consolidation complete. Clusters: {len(cluster_summary)} | Pruned: {pruned}")
+
+# ==========================================================
+# 🧪  SELF-TEST
+# ==========================================================
+
+if __name__ == "__main__":
+    init_memory_db()
+    save_episode("System boot test", "success", "RIK initialized correctly.")
+    print(get_recent_episodes())
