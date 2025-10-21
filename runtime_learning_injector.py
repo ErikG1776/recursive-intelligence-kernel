@@ -7,6 +7,7 @@ into live agent runs so that each new task adapts in real time.
 
 import os
 import sqlite3
+from memory import get_db_path
 from rik_fail_safe.fallback_core import (
     diagnose,
     generate_strategies,
@@ -17,7 +18,7 @@ from rik_fail_safe.fallback_core import (
 from rik_fail_safe.integration_examples.adaptive_fallback_engine import choose_strategy
 
 # === Correct path to main memory.db ===
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "memory.db"))
+DB_PATH = get_db_path()
 def get_learned_weights():
     """Retrieve learned success rates for all strategies."""
     conn = sqlite3.connect(DB_PATH)

@@ -11,8 +11,10 @@ import os
 import sqlite3
 from datetime import datetime
 import json
+import random
+from memory import get_db_path
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
+DB_PATH = get_db_path()
 
 # ==========================================================
 # === Brick 1: Rollback Mechanism ==========================
@@ -132,22 +134,8 @@ def visualize_architecture(adl_schema: dict = None, save_path: str = "architectu
 
 
 # ==========================================================
-# === Manual Test Runner ===================================
+# === Brick 7: Fitness Function ============================
 # ==========================================================
-if __name__ == "__main__":
-    # Test rollback system initialization
-    print("[ℹ️] Rollback system ready. Database verified at:", DB_PATH)
-
-    # Generate test architecture diagram
-    visualize_architecture()
-    """
-Brick 7 — Fitness Function
---------------------------------------------
-Simulates architecture performance and assigns
-a fitness score based on efficiency + robustness.
-"""
-
-import random
 
 def evaluate_fitness():
     """
@@ -188,7 +176,10 @@ def evaluate_fitness():
     return fitness_score
 
 
-# Extend the manual test runner
+# ==========================================================
+# === Manual Test Runner ===================================
+# ==========================================================
+
 if __name__ == "__main__":
     print("[ℹ️] Rollback system ready. Database verified at:", DB_PATH)
     visualize_architecture()

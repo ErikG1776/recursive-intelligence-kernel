@@ -10,8 +10,9 @@ import sqlite3
 import os
 from contextlib import contextmanager
 from datetime import datetime
+from memory import get_db_path
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
+DB_PATH = get_db_path()
 
 
 # ==========================================================

@@ -15,6 +15,7 @@ from jsonschema import validate, ValidationError
 from sklearn.cluster import DBSCAN
 from sklearn.feature_extraction.text import TfidfVectorizer
 import networkx as nx
+from memory import get_db_path
 
 
 # ==========================================================
@@ -67,12 +68,10 @@ def validate_task_schema(task: dict) -> bool:
 # ==========================================================
 # === Brick 4 : Abstraction Creation ========================
 # ==========================================================
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
-
 
 def extract_sequences():
     """Retrieve prior task sequences (primitive patterns) from episodes table."""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     c = conn.cursor()
     c.execute("SELECT description FROM episodes")
     rows = c.fetchall()
@@ -108,7 +107,7 @@ def create_abstractions(sim_threshold: float = 0.7):
             print(f"[🧩] Created abstraction → {abstraction_name}")
 
     # Persist abstractions
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path())
     c = conn.cursor()
     c.execute("""
         CREATE TABLE IF NOT EXISTS abstractions (

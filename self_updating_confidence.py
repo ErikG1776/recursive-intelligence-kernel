@@ -7,9 +7,10 @@ This closes the recursive loop: reflection → learning → adaptation → refle
 
 import os
 import sqlite3
+from memory import get_db_path
 
 # === Correct path to main memory.db ===
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "memory.db"))
+DB_PATH = get_db_path()
 def create_weights_table():
     """Ensure the strategy_weights table exists."""
     conn = sqlite3.connect(DB_PATH)

@@ -14,10 +14,14 @@ import reasoning
 import meta
 import execution
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
+DB_PATH = memory.get_db_path()
 
 def run_integration_test():
     print("\n🧩  Starting RIK v5.0 Integration Test...\n")
+
+    # 0️⃣ Initialize memory database
+    memory.init_memory_db()
+    print("[✅] Memory database initialized.\n")
 
     # 1️⃣ Validate a task
     task = {
@@ -31,7 +35,11 @@ def run_integration_test():
 
     # 2️⃣ Save a mock episode
     description = "Integration Test Run — " + datetime.now().isoformat()
-    memory.save_episode(description=description)
+    memory.save_episode(
+        task=description,
+        result="success",
+        reflection="RIK v5.0 integration test completed successfully"
+    )
 
     # 3️⃣ Execute a safe write using concurrency lock
     execution.execute_with_lock(
