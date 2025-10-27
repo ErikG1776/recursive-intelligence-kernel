@@ -38,6 +38,26 @@ graph TD
 
 ## 🚀 Quick Start
 
+### 🎯 Interactive Demo (Recommended)
+Experience RIK's capabilities through our professional web-based demo:
+
+```bash
+./run_demo.sh        # Mac/Linux
+run_demo.bat         # Windows
+```
+
+The demo showcases:
+- 🤖 **Live RPA bot simulations** with failure scenarios
+- 📊 **Real-time analytics** and ROI calculator
+- 🧠 **Memory & learning** visualization
+- ⚙️ **System architecture** deep-dive
+
+**Perfect for presentations, customer demos, and technical evaluations!**
+
+See [DEMO_README.md](DEMO_README.md) for full demo guide.
+
+---
+
 ### 1️⃣ Local Run (Python)
 ```bash
 python3 integration_test.py
