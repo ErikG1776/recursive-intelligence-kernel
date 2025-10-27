@@ -161,6 +161,11 @@ def validate_analogy(task_a: dict, task_b: dict, sim_threshold: float = 0.7) -> 
     Return True if tasks are analogous both structurally (isomorphism)
     and semantically (TF-IDF ≥ threshold).
     """
+    # Quick check for identical tasks
+    if task_a == task_b:
+        print("[✅] Tasks are identical.")
+        return True
+
     G1, G2 = build_graph(task_a), build_graph(task_b)
 
     iso = nx.is_isomorphic(G1, G2, node_match=lambda x, y: x["primitive"] == y["primitive"])
