@@ -21,3 +21,7 @@ rik_sdk.egg-info/SOURCES.txt
 rik_sdk.egg-info/dependency_links.txt
 rik_sdk.egg-info/requires.txt
 rik_sdk.egg-info/top_level.txt
+tests/__init__.py
+tests/test_memory.py
+tests/test_meta.py
+tests/test_reasoning.py
