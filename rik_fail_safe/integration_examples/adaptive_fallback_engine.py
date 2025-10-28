@@ -1,80 +1,98 @@
 """
-adaptive_fallback_engine.py | RIK-Fail-Safe Phase 4 – Brick 3
---------------------------------------------------------------
-Adjusts future fallback strategy selection based on historical
-success data from episodic_memory.
+adaptive_fallback_engine.py | RIK Fail-Safe Module
+-------------------------------------------------
+Handles strategy selection and adaptive weighting
+for failed RPA tasks during demo simulations.
+Now auto-creates the strategy_weights table if missing.
 """
 
-import os
-import sqlite3
-import random
+import sqlite3, os, random
 
-# === Correct path to main memory.db ===
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/memory.db"))
+DB_PATH = os.path.join(os.path.dirname(__file__), "../../data/memory.db")
 
-def get_strategy_weights():
-    """Fetch success rates from episodic_memory to weight future choices."""
+
+# ---------------------------------------------------------------------
+# 🔹 Schema self-healing
+# ---------------------------------------------------------------------
+def ensure_strategy_table():
+    """Create or patch the strategy_weights table if needed."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-
     c.execute("""
-        SELECT strategy,
-               COUNT(*) AS uses,
-               SUM(CASE WHEN actual_outcome = 'success' THEN 1 ELSE 0 END) * 1.0 / COUNT(*) AS success_rate
-        FROM episodic_memory
-        GROUP BY strategy;
+    CREATE TABLE IF NOT EXISTS strategy_weights (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        strategy TEXT,
+        uses INTEGER DEFAULT 0,
+        successes INTEGER DEFAULT 0,
+        actual_outcome TEXT DEFAULT '',
+        weight REAL DEFAULT 1.0
+    );
     """)
-    data = c.fetchall()
+    # make sure the strategy column exists
+    try:
+        c.execute("SELECT strategy FROM strategy_weights LIMIT 1;")
+    except sqlite3.OperationalError:
+        c.execute("ALTER TABLE strategy_weights ADD COLUMN strategy TEXT;")
+    conn.commit()
     conn.close()
 
-    weights = {}
-    for strategy, uses, success_rate in data:
-        if strategy:
-            # Basic weighting: more successes → higher weight
-            weights[strategy] = round(success_rate, 3)
-    return weights or {"Re-run task with safe defaults": 1.0}
 
-def choose_strategy(possible_strategies):
-    """
-    Pick a strategy, favoring ones with higher historical success.
-    """
+# ---------------------------------------------------------------------
+# 🔹 Retrieve strategy performance weights
+# ---------------------------------------------------------------------
+def get_strategy_weights():
+    ensure_strategy_table()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+        SELECT
+            strategy,
+            COUNT(*) AS uses,
+            SUM(CASE WHEN actual_outcome = 'success' THEN 1 ELSE 0 END) AS successes
+        FROM strategy_weights
+        GROUP BY strategy;
+    """)
+    rows = c.fetchall()
+    conn.close()
+    weights = {r[0]: (r[2] / max(r[1], 1)) if r[1] > 0 else 1.0 for r in rows}
+    if not weights:
+        # default seed weights
+        weights = {"Search with alternative selector": 1.0}
+    return weights
+
+
+# ---------------------------------------------------------------------
+# 🔹 Choose the best strategy
+# ---------------------------------------------------------------------
+def choose_strategy(strategies):
     weights = get_strategy_weights()
     print("\n📚 Current learned weights:", weights)
-
-    scored = []
-    for strat in possible_strategies:
-        weight = weights.get(strat, 0.5)  # default neutral weight
-        scored.append((strat, weight))
-
-    total = sum(w for _, w in scored)
-    if total == 0:
-        return random.choice(possible_strategies)
-
-    # Weighted random choice
+    # weighted random choice
+    total = sum(weights.get(s, 1.0) for s in strategies)
     pick = random.uniform(0, total)
-    running = 0
-    for strat, weight in scored:
-        running += weight
-        if pick <= running:
-            print(f"🎯 Adaptive engine selected: {strat}")
-            return strat
-
-    # Fallback catch-all
-    return possible_strategies[0]
+    current = 0
+    for s in strategies:
+        current += weights.get(s, 1.0)
+        if current >= pick:
+            return s
+    return random.choice(strategies)
 
 
-def demo_adaptive_choice():
-    """
-    Demo how the adaptive engine selects a strategy based on learned memory.
-    """
-    test_strategies = [
-        "Retry with longer wait time",
-        "Re-run task with safe defaults",
-        "Search with alternative selector"
-    ]
-    chosen = choose_strategy(test_strategies)
-    print(f"\n✅ Adaptive Fallback Engine chose: {chosen}\n")
-
-
-if __name__ == "__main__":
-    demo_adaptive_choice()
+# ---------------------------------------------------------------------
+# 🔹 Simulated counterfactuals
+# ---------------------------------------------------------------------
+def simulate_counterfactuals(chosen_strategies):
+    """Simulate alternate strategies for demonstration."""
+    results = []
+    for s in chosen_strategies:
+        success = random.random() > 0.3
+        results.append({"strategy": s, "outcome": "success" if success else "fail"})
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO strategy_weights (strategy, actual_outcome, weight) VALUES (?, ?, ?)",
+            (s, "success" if success else "fail", 1.0),
+        )
+        conn.commit()
+        conn.close()
+    return results
