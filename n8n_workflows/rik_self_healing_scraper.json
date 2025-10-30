@@ -1,0 +1,265 @@
+{
+  "name": "RIK Self-Healing Web Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "name": "Schedule Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.ycombinator.com",
+        "options": {}
+      },
+      "name": "Fetch Hacker News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract title using CSS selector\nconst html = $input.item.json.data;\nconst cssSelector = '.titleline > a';  // Current working selector\n\n// Use a simple regex to extract titles (in production, use proper HTML parser)\nconst regex = /<a[^>]+class=\"[^\"]*titleline[^\"]*\"[^>]*>([^<]+)</gi;\nconst matches = [];\nlet match;\n\nwhile ((match = regex.exec(html)) !== null) {\n  matches.push(match[1].trim());\n}\n\nif (matches.length === 0) {\n  // Extraction failed - trigger RIK recovery\n  return {\n    json: {\n      success: false,\n      selector: cssSelector,\n      html: html.substring(0, 5000),  // Send first 5000 chars to RIK\n      url: 'https://news.ycombinator.com',\n      error: 'Selector found no elements'\n    }\n  };\n}\n\n// Extraction succeeded\nreturn {\n  json: {\n    success: true,\n    selector: cssSelector,\n    titles: matches.slice(0, 10),  // Top 10 stories\n    count: matches.length,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Extract Titles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.success}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Check If Extraction Succeeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/recover_selector",
+        "options": {},
+        "bodyParametersJson": "={\n  \"failed_selector\": \"{{$json.selector}}\",\n  \"html\": \"{{$json.html}}\",\n  \"url\": \"{{$json.url}}\",\n  \"context\": {\n    \"timestamp\": \"{{$json.timestamp}}\",\n    \"error\": \"{{$json.error}}\"\n  }\n}"
+      },
+      "name": "Call RIK Selector Recovery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse RIK response and extract recommended selector\nconst rikResponse = $input.item.json;\n\nif (!rikResponse.success || !rikResponse.recommended) {\n  throw new Error('RIK recovery failed - no alternatives found');\n}\n\nconst recommended = rikResponse.recommended;\n\nreturn {\n  json: {\n    original_selector: rikResponse.original_selector,\n    new_selector: recommended.selector,\n    strategy: recommended.strategy,\n    confidence: recommended.confidence,\n    total_alternatives: rikResponse.total_alternatives,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Parse RIK Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$json.timestamp}}",
+            "Selector": "={{$json.selector}}",
+            "Status": "=Success",
+            "Titles Found": "={{$json.count}}",
+            "Sample Title": "={{$json.titles[0]}}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Log Success to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$json.timestamp}}",
+            "Original Selector": "={{$json.original_selector}}",
+            "New Selector": "={{$json.new_selector}}",
+            "Strategy": "={{$json.strategy}}",
+            "Confidence": "={{$json.confidence}}",
+            "Status": "=Auto-Recovered by RIK"
+          }
+        },
+        "options": {}
+      },
+      "name": "Log Recovery to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Display summary of workflow execution\nconst success = $json.success || false;\nconst message = success \n  ? `✅ Scraped ${$json.count} titles successfully`\n  : `🔄 RIK recovered selector: ${$json.new_selector} (${$json.confidence*100}% confidence)`;\n\nconsole.log(message);\n\nreturn { json: { message, success } };"
+      },
+      "name": "Display Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        250
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Hacker News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Hacker News": {
+      "main": [
+        [
+          {
+            "node": "Extract Titles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Titles": {
+      "main": [
+        [
+          {
+            "node": "Check If Extraction Succeeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Extraction Succeeded": {
+      "main": [
+        [
+          {
+            "node": "Log Success to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Display Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call RIK Selector Recovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call RIK Selector Recovery": {
+      "main": [
+        [
+          {
+            "node": "Parse RIK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse RIK Response": {
+      "main": [
+        [
+          {
+            "node": "Log Recovery to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Display Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-15T00:00:00.000Z",
+  "versionId": "1"
+}
