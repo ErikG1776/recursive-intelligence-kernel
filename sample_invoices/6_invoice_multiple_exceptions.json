@@ -1,0 +1,11 @@
+{
+  "invoice_number": "INV-2024-006",
+  "vendor_name": "Salesforc Inc",
+  "amount": 6200.00,
+  "date": "10/27/2024",
+  "po_number": "",
+  "line_items": [
+    {"description": "CRM Platform License", "quantity": 25, "unit_price": 248.00, "total": 6200.00}
+  ],
+  "notes": "Multiple exceptions: (1) Vendor name typo 'Salesforc' vs 'Salesforce Inc', (2) Missing PO number, (3) Amount over $5K threshold. RIK must reason about ALL exceptions to make decision."
+}

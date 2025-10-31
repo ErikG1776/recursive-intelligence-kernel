@@ -1,0 +1,12 @@
+{
+  "invoice_number": "2024-INV-8834",
+  "vendor_name": "Google LLC",
+  "amount": 4850.00,
+  "date": "2024-10-30",
+  "po_number": "PO-2024-5523",
+  "line_items": [
+    {"item": "Google Workspace Enterprise", "qty": 50, "rate": 97.00, "amount": 4850.00}
+  ],
+  "template_format": "new_v2_format",
+  "notes": "New invoice template format with different field names (qty vs quantity, rate vs unit_price). Traditional RPA would fail. RIK should adapt and extract successfully."
+}

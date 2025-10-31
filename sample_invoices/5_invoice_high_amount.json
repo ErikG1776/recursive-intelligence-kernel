@@ -1,0 +1,13 @@
+{
+  "invoice_number": "INV-2024-005",
+  "vendor_name": "Amazon Web Services",
+  "amount": 12500.00,
+  "date": "10/29/2024",
+  "po_number": "PO-2024-5524",
+  "line_items": [
+    {"description": "EC2 Instances", "quantity": 1, "unit_price": 7200.00, "total": 7200.00},
+    {"description": "S3 Storage", "quantity": 1, "unit_price": 3100.00, "total": 3100.00},
+    {"description": "Data Transfer", "quantity": 1, "unit_price": 2200.00, "total": 2200.00}
+  ],
+  "notes": "High amount invoice ($12,500) exceeds auto-approve threshold ($5,000). RIK should escalate to manager for approval."
+}

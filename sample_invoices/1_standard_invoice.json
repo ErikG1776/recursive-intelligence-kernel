@@ -1,0 +1,12 @@
+{
+  "invoice_number": "INV-2024-001",
+  "vendor_name": "Acme Corporation",
+  "amount": 3240.00,
+  "date": "10/30/2024",
+  "po_number": "PO-2024-5521",
+  "line_items": [
+    {"description": "Widget Assembly Kit", "quantity": 50, "unit_price": 45.00, "total": 2250.00},
+    {"description": "Fastener Set Premium", "quantity": 100, "unit_price": 9.90, "total": 990.00}
+  ],
+  "notes": "Standard invoice - happy path with all required fields"
+}

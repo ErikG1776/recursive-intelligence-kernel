@@ -1,0 +1,13 @@
+{
+  "invoice_number": "INV-2024-003",
+  "vendor_name": "Microsft Corporation",
+  "amount": 8500.00,
+  "date": "10/28/2024",
+  "po_number": "PO-2024-5522",
+  "line_items": [
+    {"description": "Azure Cloud Services", "quantity": 1, "unit_price": 8500.00, "total": 8500.00}
+  ],
+  "vendor_address": "1 Microsoft Way, Redmond, WA 98052",
+  "vendor_email": "accounts@microsoft.com",
+  "notes": "Vendor name typo: 'Microsft' instead of 'Microsoft Corporation'. RIK should detect 92% similarity and auto-correct."
+}

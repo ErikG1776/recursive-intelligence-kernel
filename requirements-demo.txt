@@ -20,3 +20,9 @@ lxml>=4.9.0
 streamlit>=1.28.0
 plotly>=5.17.0
 pandas>=2.0.0
+
+# Invoice processing dependencies
+# Note: Current demo uses JSON. For real PDF processing, add:
+# pypdf2>=3.0.0  (basic PDF text extraction)
+# pdfplumber>=0.10.0  (advanced PDF parsing with tables)
+# pytesseract>=0.3.10  (OCR for scanned PDFs)

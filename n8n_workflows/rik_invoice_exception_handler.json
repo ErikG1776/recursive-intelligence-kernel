@@ -1,0 +1,328 @@
+{
+  "name": "RIK Invoice Exception Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/1 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 1 Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "path": "sample_invoices",
+        "fileExtension": "*.json"
+      },
+      "id": "read-files",
+      "name": "Read Invoice Files",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [470, 300],
+      "notes": "Reads all JSON files from sample_invoices folder"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "convert-binary",
+      "name": "Convert to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [690, 300],
+      "notes": "Converts binary JSON to text"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/process_invoice",
+        "authentication": "none",
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "options": {
+          "timeout": 10000
+        },
+        "bodyParametersJson": "={\n  \"pdf_content\": {{ $json.data }},\n  \"invoice_id\": \"{{ $json.fileName }}\",\n  \"context\": {\n    \"source\": \"n8n_workflow\",\n    \"processed_at\": \"{{ $now.toISO() }}\"\n  }\n}"
+      },
+      "id": "call-rik-api",
+      "name": "RIK Process Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [910, 300],
+      "notes": "Calls RIK API to process invoice with exception handling"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.final_action }}",
+              "operation": "equals",
+              "value2": "approve"
+            }
+          ]
+        }
+      },
+      "id": "check-decision",
+      "name": "Check Decision",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1130, 300],
+      "notes": "Routes based on RIK's decision: approve vs escalate"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "✅ APPROVED"
+            },
+            {
+              "name": "action_taken",
+              "value": "Auto-approved by RIK"
+            },
+            {
+              "name": "color",
+              "value": "#00ff00"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "approved-fields",
+      "name": "Approved Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [1350, 200],
+      "notes": "Prepare data for approved invoices"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "⚠️ ESCALATED"
+            },
+            {
+              "name": "action_taken",
+              "value": "Requires manager approval"
+            },
+            {
+              "name": "color",
+              "value": "#ff9900"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "escalated-fields",
+      "name": "Escalated Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [1350, 400],
+      "notes": "Prepare data for escalated invoices"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "RIK Invoice Log"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "Invoice_ID": "={{ $('RIK Process Invoice').item.json.invoice_id }}",
+            "Vendor": "={{ $('RIK Process Invoice').item.json.invoice_data.vendor_name }}",
+            "Amount": "={{ $('RIK Process Invoice').item.json.invoice_data.amount }}",
+            "Exceptions_Found": "={{ $('RIK Process Invoice').item.json.exceptions_found }}",
+            "Final_Action": "={{ $('RIK Process Invoice').item.json.final_action }}",
+            "Status": "={{ $json.status }}",
+            "Processing_Time": "={{ $('RIK Process Invoice').item.json.processing_time_seconds }}",
+            "Traditional_RPA_Would_Fail": "={{ $('RIK Process Invoice').item.json.traditional_rpa_would_fail }}",
+            "Reasoning": "={{ $('RIK Process Invoice').item.json.decisions[0]?.decision.reasoning || 'No exceptions' }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "log-to-sheets",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [1570, 300],
+      "notes": "Logs all invoice processing results with RIK's reasoning",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_CREDENTIALS_ID",
+          "name": "Google Sheets Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $('RIK Process Invoice').item.json.traditional_rpa_would_fail }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-rik-advantage",
+      "name": "RIK Saved The Day?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1790, 300],
+      "notes": "Checks if this invoice would have failed with traditional RPA"
+    },
+    {
+      "parameters": {
+        "text": "=🎉 RIK Success!\n\nInvoice: {{ $('RIK Process Invoice').item.json.invoice_id }}\nVendor: {{ $('RIK Process Invoice').item.json.invoice_data.vendor_name }}\nAmount: ${{ $('RIK Process Invoice').item.json.invoice_data.amount }}\n\n{{ $('RIK Process Invoice').item.json.exceptions_found }} exceptions detected:\n{{ $('RIK Process Invoice').item.json.exceptions.map(e => '• ' + e.message).join('\\n') }}\n\n✅ RIK Decision: {{ $('RIK Process Invoice').item.json.final_action.toUpperCase() }}\n\nReasoning:\n{{ $('RIK Process Invoice').item.json.decisions[0]?.decision.reasoning }}\n\n⚡ Traditional RPA would have FAILED - RIK auto-resolved!\n\nProcessing time: {{ $('RIK Process Invoice').item.json.processing_time_seconds }}s"
+      },
+      "id": "success-notification",
+      "name": "Success Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [2010, 200],
+      "notes": "Prepare success notification showing RIK's advantage"
+    }
+  ],
+  "connections": {
+    "Every 1 Minute": {
+      "main": [
+        [
+          {
+            "node": "Read Invoice Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Invoice Files": {
+      "main": [
+        [
+          {
+            "node": "Convert to Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Text": {
+      "main": [
+        [
+          {
+            "node": "RIK Process Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RIK Process Invoice": {
+      "main": [
+        [
+          {
+            "node": "Check Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Decision": {
+      "main": [
+        [
+          {
+            "node": "Approved Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Escalated Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved Fields": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalated Fields": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "RIK Saved The Day?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RIK Saved The Day?": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-10-31T00:00:00.000Z",
+  "versionId": "1"
+}
