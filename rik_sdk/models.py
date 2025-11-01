@@ -10,6 +10,10 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 
+# ============================================================
+# Invoice Processing
+# ============================================================
+
 @dataclass
 class InvoiceProcessingResult:
     """Result of invoice processing with exception handling."""
@@ -52,6 +56,10 @@ class InvoiceProcessingResult:
         return self.final_action == "escalate" or self.confidence_score < 0.7
 
 
+# ============================================================
+# Selector Recovery
+# ============================================================
+
 @dataclass
 class SelectorRecoveryResult:
     """Result of web scraper selector recovery."""
@@ -82,6 +90,10 @@ class SelectorRecoveryResult:
         return self.confidence_score >= 0.8
 
 
+# ============================================================
+# Health Status
+# ============================================================
+
 @dataclass
 class HealthStatus:
     """Health status of RIK API."""
@@ -108,6 +120,10 @@ class HealthStatus:
         return self.status == "healthy" or self.status == "alive"
 
 
+# ============================================================
+# Metrics (Fixed for Float + Dict Formats)
+# ============================================================
+
 @dataclass
 class MetricsResponse:
     """RIK performance and efficiency metrics."""
@@ -122,13 +138,30 @@ class MetricsResponse:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "MetricsResponse":
-        """Create from API response dictionary."""
-        # Handle both direct metrics and nested structure
-        if "metrics" in data:
-            metrics_data = data["metrics"]
-        else:
-            metrics_data = data
+        """Create from API response dictionary.
+        Handles both float (efficiency only) and dict formats."""
+        # Case 1: API returns a single float
+        if isinstance(data, float):
+            return cls(
+                efficiency=data,
+                total_episodes=0,
+                successful_episodes=0,
+                failed_episodes=0,
+                avg_processing_time_seconds=0.0,
+            )
 
+        # Case 2: metrics key exists and is a float
+        metrics_data = data.get("metrics", data)
+        if isinstance(metrics_data, float):
+            return cls(
+                efficiency=metrics_data,
+                total_episodes=0,
+                successful_episodes=0,
+                failed_episodes=0,
+                avg_processing_time_seconds=0.0,
+            )
+
+        # Case 3: metrics is a dict (structured response)
         return cls(
             efficiency=metrics_data.get("efficiency", 0.0),
             total_episodes=metrics_data.get("total_episodes", 0),
@@ -139,6 +172,10 @@ class MetricsResponse:
             metadata=data.get("metadata", {}),
         )
 
+
+# ============================================================
+# Invoice Statistics
+# ============================================================
 
 @dataclass
 class InvoiceStats:
@@ -168,6 +205,10 @@ class InvoiceStats:
             automation_improvement=stats.get("automation_improvement", "0%"),
         )
 
+
+# ============================================================
+# Task Result
+# ============================================================
 
 @dataclass
 class TaskResult:
