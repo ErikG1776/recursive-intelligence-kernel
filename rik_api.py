@@ -17,7 +17,7 @@ from fastapi import FastAPI, HTTPException, Request, Security, status, Depends
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, Dict, Any
 import uvicorn
@@ -189,7 +189,8 @@ def check_rate_limit(request: Request, api_key: str = Depends(verify_api_key)):
 class TaskRequest(BaseModel):
     task: str = Field(..., min_length=1, max_length=1000, description="Task description")
 
-    @validator('task')
+    @field_validator('task')
+    @classmethod
     def task_must_not_be_empty(cls, v):
         if not v.strip():
             raise ValueError("Task cannot be empty")
@@ -217,7 +218,8 @@ class InvoiceProcessRequest(BaseModel):
     invoice_id: Optional[str] = Field(None, max_length=100)
     context: Optional[Dict[str, Any]] = None
 
-    @validator('invoice_id')
+    @field_validator('invoice_id')
+    @classmethod
     def validate_invoice_id(cls, v):
         if v and not v.replace("-", "").replace("_", "").isalnum():
             raise ValueError("Invoice ID contains invalid characters")

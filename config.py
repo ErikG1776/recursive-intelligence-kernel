@@ -39,7 +39,8 @@ class Config:
     API_HOST = os.getenv("RIK_API_HOST", "0.0.0.0")
     API_PORT = int(os.getenv("RIK_API_PORT", "8000"))
     API_WORKERS = int(os.getenv("RIK_API_WORKERS", "1"))
-    API_RELOAD = os.getenv("RIK_API_RELOAD", "true").lower() == "true"  # Hot reload in dev
+    # Auto-reload: only enabled in development by default
+    API_RELOAD = os.getenv("RIK_API_RELOAD", "true" if Config.ENVIRONMENT == "development" else "false").lower() == "true"
 
     # API metadata
     API_TITLE = "RIK - Recursive Intelligence Kernel"

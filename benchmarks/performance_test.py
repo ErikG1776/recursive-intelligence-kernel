@@ -157,13 +157,17 @@ def benchmark_health_endpoint():
     print(f"  Total requests: {len(results)}")
     print(f"  Success rate: {success_rate:.1%}")
     print(f"  Throughput: {throughput:.1f} req/sec")
-    print(f"\n  Latency (ms):")
-    print(f"    Min: {percentiles['min']:.2f}")
-    print(f"    P50: {percentiles['p50']:.2f}")
-    print(f"    P95: {percentiles['p95']:.2f}")
-    print(f"    P99: {percentiles['p99']:.2f}")
-    print(f"    Max: {percentiles['max']:.2f}")
-    print(f"    Mean: {percentiles['mean']:.2f} ± {percentiles['stddev']:.2f}")
+
+    if percentiles:
+        print(f"\n  Latency (ms):")
+        print(f"    Min: {percentiles['min']:.2f}")
+        print(f"    P50: {percentiles['p50']:.2f}")
+        print(f"    P95: {percentiles['p95']:.2f}")
+        print(f"    P99: {percentiles['p99']:.2f}")
+        print(f"    Max: {percentiles['max']:.2f}")
+        print(f"    Mean: {percentiles['mean']:.2f} ± {percentiles['stddev']:.2f}")
+    else:
+        print(f"\n  Latency: N/A (no successful requests)")
 
     return {
         "name": "health_endpoint",
@@ -228,13 +232,17 @@ def benchmark_invoice_processing():
     print(f"  Total requests: {len(results)}")
     print(f"  Success rate: {success_rate:.1%}")
     print(f"  Throughput: {throughput:.1f} req/sec")
-    print(f"\n  Latency (ms):")
-    print(f"    Min: {percentiles['min']:.2f}")
-    print(f"    P50: {percentiles['p50']:.2f}")
-    print(f"    P95: {percentiles['p95']:.2f}")
-    print(f"    P99: {percentiles['p99']:.2f}")
-    print(f"    Max: {percentiles['max']:.2f}")
-    print(f"    Mean: {percentiles['mean']:.2f} ± {percentiles['stddev']:.2f}")
+
+    if percentiles:
+        print(f"\n  Latency (ms):")
+        print(f"    Min: {percentiles['min']:.2f}")
+        print(f"    P50: {percentiles['p50']:.2f}")
+        print(f"    P95: {percentiles['p95']:.2f}")
+        print(f"    P99: {percentiles['p99']:.2f}")
+        print(f"    Max: {percentiles['max']:.2f}")
+        print(f"    Mean: {percentiles['mean']:.2f} ± {percentiles['stddev']:.2f}")
+    else:
+        print(f"\n  Latency: N/A (no successful requests)")
 
     return {
         "name": "invoice_processing",
@@ -299,13 +307,17 @@ def benchmark_concurrent_load():
     print(f"  Success rate: {success_rate:.1%}")
     print(f"  Throughput: {throughput:.1f} req/sec")
     print(f"  Concurrency: {BENCHMARK_CONFIG['concurrent_workers']} workers")
-    print(f"\n  Latency (ms):")
-    print(f"    Min: {percentiles['min']:.2f}")
-    print(f"    P50: {percentiles['p50']:.2f}")
-    print(f"    P95: {percentiles['p95']:.2f}")
-    print(f"    P99: {percentiles['p99']:.2f}")
-    print(f"    Max: {percentiles['max']:.2f}")
-    print(f"    Mean: {percentiles['mean']:.2f} ± {percentiles['stddev']:.2f}")
+
+    if percentiles:
+        print(f"\n  Latency (ms):")
+        print(f"    Min: {percentiles['min']:.2f}")
+        print(f"    P50: {percentiles['p50']:.2f}")
+        print(f"    P95: {percentiles['p95']:.2f}")
+        print(f"    P99: {percentiles['p99']:.2f}")
+        print(f"    Max: {percentiles['max']:.2f}")
+        print(f"    Mean: {percentiles['mean']:.2f} ± {percentiles['stddev']:.2f}")
+    else:
+        print(f"\n  Latency: N/A (no successful requests)")
 
     return {
         "name": "concurrent_load",
@@ -431,8 +443,11 @@ def run_all_benchmarks():
         if "throughput_per_sec" in result:
             print(f"\n{result['name'].replace('_', ' ').title()}:")
             print(f"  Throughput: {result['throughput_per_sec']:.1f} req/sec")
-            print(f"  P50 latency: {result['latency_ms']['p50']:.2f} ms")
-            print(f"  P95 latency: {result['latency_ms']['p95']:.2f} ms")
+            if result.get('latency_ms'):
+                print(f"  P50 latency: {result['latency_ms']['p50']:.2f} ms")
+                print(f"  P95 latency: {result['latency_ms']['p95']:.2f} ms")
+            else:
+                print(f"  Latency: N/A (no successful requests)")
             print(f"  Success rate: {result['success_rate']:.1%}")
 
     # Save results
