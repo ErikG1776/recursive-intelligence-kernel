@@ -1,0 +1,30 @@
+{
+  "name": "rik-client",
+  "version": "1.0.0",
+  "description": "JavaScript/Node.js client library for the Recursive Intelligence Kernel (RIK)",
+  "main": "rik-client.js",
+  "scripts": {
+    "test": "node example.js"
+  },
+  "keywords": [
+    "rik",
+    "rpa",
+    "automation",
+    "ai",
+    "intelligent-automation",
+    "exception-handling",
+    "web-scraping"
+  ],
+  "author": "RIK Team",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/rik"
+  }
+}
