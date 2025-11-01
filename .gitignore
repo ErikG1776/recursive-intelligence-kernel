@@ -56,3 +56,25 @@ Thumbs.db
 *.tmp
 *.temp
 *.bak
+
+# Environment files (CRITICAL: Never commit secrets!)
+.env
+!.env.example
+
+# Data directories
+data/
+logs/
+
+# Benchmark results
+benchmarks/results/
+
+# Backup files
+*_old.py
+*_backup.py
+backup/
+
+# API keys and secrets (CRITICAL!)
+**/api_keys.txt
+**/*secret*
+**/*password*
+**/*credentials*
