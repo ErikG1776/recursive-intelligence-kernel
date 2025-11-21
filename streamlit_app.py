@@ -177,26 +177,43 @@ class InvoiceParser:
             "invoice_number": [
                 r"Invoice\s*(?:#|Number|No\.?|ID)?\s*[:\s]*([A-Z0-9\-]+)",
                 r"INV[:\s\-]*([A-Z0-9\-]+)",
-                r"Invoice[:\s]+([A-Z0-9\-]+)",
+                r"Account\s*(?:#|Number|No\.?)?\s*[:\s]*([A-Z0-9\-]+)",
+                r"Statement\s*(?:#|Number|No\.?)?\s*[:\s]*([A-Z0-9\-]+)",
             ],
             "amount": [
-                r"TOTAL[:\s]*\$?([\d,]+\.?\d*)",
-                r"Total\s*(?:Due|Amount)?[:\s]*\$?([\d,]+\.?\d*)",
-                r"Amount\s*Due[:\s]*\$?([\d,]+\.?\d*)",
-                r"INVOICE\s*TOTAL[:\s]*\$?([\d,]+\.?\d*)",
+                r"Total\s*Due[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Amount\s*Due[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Balance\s*Due[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Total\s*Amount[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Amount\s*Enclosed[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Please\s*Pay[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Current\s*Charges[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"TOTAL[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Total[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"Amount[:\s]*\$?\s*([\d,]+\.\d{2})",
+                r"USD\s*\$?\s*([\d,]+\.\d{2})",
+                r"\$\s*([\d,]+\.\d{2})",  # Fallback: any dollar amount
             ],
             "po_number": [
                 r"PO\s*(?:#|Number|No\.?)?\s*[:\s]*([A-Z0-9\-]+)",
                 r"Purchase\s*Order[:\s]*([A-Z0-9\-]+)",
                 r"Requisition[:\s]*([A-Z0-9\-]+)",
+                r"Reference[:\s#]*([A-Z0-9\-]+)",
             ],
             "vendor": [
-                r"^([A-Z][A-Za-z\s&,\.]+(?:LLC|Inc|Corp|Corporation|Company|Co|Ltd))",
-                r"From[:\s]*\n*([A-Za-z\s&,\.]+(?:LLC|Inc|Corp|Corporation|Company|Co|Ltd)?)",
+                r"^([A-Z][A-Za-z\s&,\.]+(?:LLC|Inc|Corp|Corporation|Company|Co|Ltd|Networks|Communications|Telecom))",
+                r"From[:\s]*\n*([A-Za-z\s&,\.]+)",
+                r"Payable\s*To[:\s]*([A-Za-z\s&,\.]+)",
+                r"Bill\s*From[:\s]*([A-Za-z\s&,\.]+)",
             ],
             "date": [
-                r"(?:Invoice\s*)?Date[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
+                r"(?:Invoice|Bill|Statement)\s*Date[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
+                r"Due\s*Date[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
+                r"Date[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
                 r"(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
+            ],
+            "account": [
+                r"Account\s*(?:#|Number|No\.?)?\s*[:\s]*([A-Z0-9\-]+)",
             ],
             "contract": [
                 r"Contract[:\s#]*([A-Z0-9\-]+)",
@@ -237,6 +254,7 @@ class RIKReasoningEngine:
         self.auto_approve_threshold = 50000
         self.ocr_confidence_threshold = 0.70
         self.known_vendors = {
+            # Defense contractors
             "Federal Supplies Inc": {"trust_score": 0.95, "history": 47},
             "Boeing Company": {"trust_score": 0.98, "history": 156},
             "Lockheed Martin": {"trust_score": 0.97, "history": 89},
@@ -245,6 +263,15 @@ class RIKReasoningEngine:
             "Northrop Grumman": {"trust_score": 0.94, "history": 45},
             "GDIT": {"trust_score": 0.92, "history": 38},
             "Vertex Aerospace": {"trust_score": 0.91, "history": 29},
+            # Telecom/Utilities
+            "Bright House Networks": {"trust_score": 0.88, "history": 24},
+            "Spectrum": {"trust_score": 0.89, "history": 36},
+            "Level 3 Communications": {"trust_score": 0.90, "history": 18},
+            "Lumen": {"trust_score": 0.90, "history": 22},
+            "AT&T": {"trust_score": 0.92, "history": 48},
+            "Verizon": {"trust_score": 0.91, "history": 52},
+            "Comcast": {"trust_score": 0.87, "history": 31},
+            "CenturyLink": {"trust_score": 0.88, "history": 27},
         }
 
     def analyze(self, fields: Dict[str, Any], ocr_confidence: float) -> Dict[str, Any]:
@@ -255,14 +282,16 @@ class RIKReasoningEngine:
         resolutions = []
         confidence = 1.0
 
-        amount = fields.get("amount", 0)
-        if isinstance(amount, str):
+        amount = fields.get("amount")
+        if amount is None:
+            amount = 0
+        elif isinstance(amount, str):
             try:
                 amount = float(amount.replace(",", ""))
             except:
                 amount = 0
 
-        vendor = fields.get("vendor", "Unknown")
+        vendor = fields.get("vendor") or "Unknown"
         po_number = fields.get("po_number")
 
         # Exception Detection
@@ -283,8 +312,16 @@ class RIKReasoningEngine:
                 "description": f"OCR confidence {ocr_confidence:.0%} below threshold {self.ocr_confidence_threshold:.0%}"
             })
 
-        # 3. Amount above threshold
-        if amount > self.auto_approve_threshold:
+        # 3. Amount not found
+        if amount == 0:
+            exceptions.append({
+                "type": "amount_not_found",
+                "severity": "medium",
+                "description": "Could not extract amount from invoice"
+            })
+
+        # 4. Amount above threshold
+        if amount > 0 and amount > self.auto_approve_threshold:
             exceptions.append({
                 "type": "amount_above_threshold",
                 "severity": "high",
@@ -345,6 +382,13 @@ class RIKReasoningEngine:
                     f"OCR confidence {ocr_confidence:.0%} is low. Manual verification recommended."
                 )
                 confidence *= 0.7
+
+            elif exc["type"] == "amount_not_found":
+                reasoning_steps.append(
+                    "Could not extract amount from invoice. "
+                    "May be in non-standard format, table, or image. Manual review required."
+                )
+                confidence *= 0.5
 
         # Determine decision
         unresolved = len(exceptions) - resolved_count
