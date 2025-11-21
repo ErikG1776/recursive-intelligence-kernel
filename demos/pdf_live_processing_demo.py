@@ -119,11 +119,23 @@ class PDFExtractor:
         return text, confidence
 
     def _simulate_extraction(self, pdf_path: str) -> Tuple[str, float]:
-        """Simulate extraction when no PDF library available."""
-        # Generate realistic invoice text based on filename
-        filename = os.path.basename(pdf_path)
+        """Extract text from file or simulate for PDFs when no library available."""
+        # If it's a text file, read it directly
+        if pdf_path.lower().endswith('.txt'):
+            with open(pdf_path, 'r') as f:
+                text = f.read()
+            word_count = len(text.split())
+            # Estimate confidence based on content
+            if word_count > 100:
+                confidence = 0.90
+            elif word_count > 50:
+                confidence = 0.85
+            else:
+                confidence = 0.75
+            return text, confidence
 
-        # Create sample invoice text
+        # For actual PDFs without library, generate sample
+        filename = os.path.basename(pdf_path)
         text = f"""
         INVOICE
 
