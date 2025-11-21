@@ -9,22 +9,58 @@ import os
 import urllib.request
 import ssl
 
-# Sample government PDFs that are publicly available
+# Real government PDFs from official .gov sources
 GOV_PDF_SOURCES = [
+    # GSA Forms (General Services Administration)
     {
-        "name": "GSA_Invoice_Template.pdf",
-        "url": "https://www.gsa.gov/system/files/Standard_Invoice_Template.pdf",
-        "description": "GSA Standard Invoice Template"
+        "name": "SF1449_Solicitation_Contract.pdf",
+        "url": "https://www.gsa.gov/system/files/SF1449-21.pdf",
+        "description": "Federal Solicitation/Contract/Order Form"
+    },
+    {
+        "name": "GSA_Form_300.pdf",
+        "url": "https://www.gsa.gov/system/files/GSA300-7.pdf",
+        "description": "GSA Order for Supplies or Services"
     },
     {
         "name": "SF1034_Public_Voucher.pdf",
-        "url": "https://www.gsa.gov/system/files/SF1034-13.pdf",
+        "url": "https://www.gsa.gov/system/files/SF%201034%20-%20Public%20Voucher%20for%20Purchases%20and%20Services%20Other%20Than%20Personal%20-%20Renewed%20-%202020-02-28.pdf",
         "description": "Standard Form 1034 - Public Voucher"
     },
     {
-        "name": "SF1035_Continuation_Sheet.pdf",
-        "url": "https://www.gsa.gov/system/files/SF1035-5.pdf",
+        "name": "SF1035_Continuation.pdf",
+        "url": "https://www.gsa.gov/system/files/SF%201035%20-%20Public%20Voucher%20for%20Purchases%20and%20Services%20Other%20Than%20Personal%20%28Cont.%20Sheet%29%20-%20Renewed%20-%202020-02-28.pdf",
         "description": "Standard Form 1035 - Continuation Sheet"
+    },
+    # IRS Forms
+    {
+        "name": "IRS_W9_Vendor.pdf",
+        "url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf",
+        "description": "IRS W-9 Request for Taxpayer ID (vendor onboarding)"
+    },
+    # Department of Labor
+    {
+        "name": "DOL_WH347_Payroll.pdf",
+        "url": "https://www.dol.gov/sites/dolgov/files/WHD/legacy/files/wh347.pdf",
+        "description": "DOL Certified Payroll Form"
+    },
+    # CMS Medicare
+    {
+        "name": "CMS1500_Claim.pdf",
+        "url": "https://www.cms.gov/Medicare/CMS-Forms/CMS-Forms/Downloads/CMS1500.pdf",
+        "description": "CMS-1500 Health Insurance Claim Form"
+    },
+    # Small Business Administration
+    {
+        "name": "SBA_Disaster_Loan.pdf",
+        "url": "https://www.sba.gov/sites/default/files/2022-11/Disaster%20Home%20and%20Sole%20Proprietor%20Loan%20Application%20SBA%20Form%205C%20-%20508.pdf",
+        "description": "SBA Disaster Loan Application"
+    },
+    # Federal Transit Administration
+    {
+        "name": "FTA_Budget_Form.pdf",
+        "url": "https://www.transit.dot.gov/sites/fta.dot.gov/files/2021-03/FTA-Operating-Budget-Detail-Form.pdf",
+        "description": "FTA Operating Budget Detail Form"
     },
 ]
 
@@ -336,14 +372,12 @@ Payment Terms: Net 30
 
 
 def download_gov_pdfs():
-    """Attempt to download government PDFs."""
+    """Download real government PDFs from official .gov sources."""
     output_dir = os.path.join(os.path.dirname(__file__), "..", "data", "gov_pdfs")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Create SSL context that doesn't verify (for demo purposes)
+    # Create SSL context
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
 
     downloaded = []
     failed = []
@@ -352,9 +386,31 @@ def download_gov_pdfs():
         filepath = os.path.join(output_dir, pdf["name"])
         try:
             print(f"  Downloading: {pdf['name']}...")
-            urllib.request.urlretrieve(pdf["url"], filepath)
-            downloaded.append(pdf["name"])
-            print(f"    ✓ Success: {pdf['description']}")
+
+            # Create request with proper headers
+            req = urllib.request.Request(
+                pdf["url"],
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                    'Accept': 'application/pdf,*/*'
+                }
+            )
+
+            # Download with timeout
+            with urllib.request.urlopen(req, timeout=30, context=ctx) as response:
+                with open(filepath, 'wb') as f:
+                    f.write(response.read())
+
+            # Verify file size
+            size = os.path.getsize(filepath)
+            if size > 1000:  # At least 1KB
+                downloaded.append(pdf["name"])
+                print(f"    ✓ Success: {pdf['description']} ({size:,} bytes)")
+            else:
+                os.remove(filepath)
+                failed.append((pdf["name"], "File too small"))
+                print(f"    ✗ Failed: File too small ({size} bytes)")
+
         except Exception as e:
             failed.append((pdf["name"], str(e)))
             print(f"    ✗ Failed: {e}")
@@ -388,12 +444,24 @@ def main():
     print("  READY FOR DEMO")
     print("=" * 70)
     print()
-    print("Test with realistic invoices:")
+    print("📄 Test with realistic text invoices:")
     print("  python3 demos/pdf_live_processing_demo.py data/sample_pdfs/boeing_defense_invoice.txt")
     print("  python3 demos/pdf_live_processing_demo.py data/sample_pdfs/missing_po_invoice.txt")
     print()
-    print("These invoices are based on real federal contract data from USASpending.gov")
-    print("and include realistic scenarios like missing POs and multi-million dollar values.")
+    if downloaded:
+        print("📑 Test with REAL government PDFs:")
+        print("  streamlit run streamlit_app.py")
+        print("  Then upload files from: data/gov_pdfs/")
+        print()
+        print("  Real PDFs downloaded:")
+        for name in downloaded:
+            print(f"    - {name}")
+        print()
+    print("These demonstrate RIK handling real government document complexity:")
+    print("  - Multi-column layouts")
+    print("  - Form fields and tables")
+    print("  - Stamps, seals, signatures")
+    print("  - Inconsistent formatting")
     print()
 
 
