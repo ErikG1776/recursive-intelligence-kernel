@@ -137,6 +137,38 @@ The SDK abstracts all API communication so developers can interact with the Recu
 
 ---
 
+## 🎥 Live AGI UI Navigator Demo
+Demonstrate semantic UI perception, action planning, and self-healing navigation without hardcoded selectors.
+
+**Script**: `demos/live_agi_ui_navigator.py`
+
+**Prerequisites**
+- Python 3.8+
+- `pip install beautifulsoup4 requests`
+
+**Run with the bundled sample surface**
+```bash
+python3 demos/live_agi_ui_navigator.py
+```
+
+**Run against any URL with optional breakage injection**
+```bash
+python3 demos/live_agi_ui_navigator.py https://news.ycombinator.com/login --goal "log in" --no-break
+```
+
+**Advanced output controls**
+- Use `--format json` to emit the reasoning trace as structured JSON.
+- Add `--save trace.json` to persist the trace (respects the chosen format).
+- Pass a local HTML file path instead of a URL to evaluate offline surfaces.
+
+What you’ll see:
+- DOM perception → extracts buttons, form fields, and headings with semantic labels
+- Intent matching → ranks candidates for the goal (e.g., Login/Sign in/My Account)
+- Action chain → outlines the click + fill + validate plan
+- Self-healing → removes the primary trigger, rescans, and rebuilds the plan using synonyms
+
+---
+
 ## 📚 Citation / Attribution
 If you use RIK in research or demonstrations, please cite:
 
