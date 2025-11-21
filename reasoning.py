@@ -1,6 +1,6 @@
 """
 reasoning.py  |  Recursive Intelligence Kernel (RIK) v5.0
-Bricks 2–5: Grammar Validation + Abstraction Creation + Analogy Validation
+Bricks 2-5: Grammar Validation + Abstraction Creation + Analogy Validation
 ---------------------------------------------------------------------------
 Provides:
 1. TASK_GRAMMAR schema validation
@@ -8,13 +8,20 @@ Provides:
 3. Analogy validation using graph isomorphism + TF-IDF semantic similarity
 """
 
-import os, json, sqlite3
+import json
 from datetime import datetime
+from typing import Optional
+from functools import lru_cache
 import numpy as np
 from jsonschema import validate, ValidationError
 from sklearn.cluster import DBSCAN
 from sklearn.feature_extraction.text import TfidfVectorizer
 import networkx as nx
+
+from config import setup_logging, DBSCAN_EPS, DBSCAN_MIN_SAMPLES, TFIDF_SIM_THRESHOLD
+from db import get_cursor, execute_many
+
+logger = setup_logging("rik.reasoning")
 
 
 # ==========================================================
@@ -57,43 +64,59 @@ def validate_task_schema(task: dict) -> bool:
     """Validate a task dict against TASK_GRAMMAR."""
     try:
         validate(instance=task, schema=TASK_GRAMMAR)
-        print("[✅] Task validated successfully against grammar.")
+        logger.info("Task validated successfully against grammar")
         return True
     except ValidationError as e:
-        print(f"[❌] Task validation failed: {e.message}")
+        logger.warning(f"Task validation failed: {e.message}")
         return False
 
 
 # ==========================================================
-# === Brick 4 : Abstraction Creation ========================
+# === Brick 4 : Abstraction Creation =======================
 # ==========================================================
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
 
-
-def extract_sequences():
+def extract_sequences() -> list[str]:
     """Retrieve prior task sequences (primitive patterns) from episodes table."""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT description FROM episodes")
-    rows = c.fetchall()
-    conn.close()
+    with get_cursor(commit=False) as cursor:
+        cursor.execute("SELECT task FROM episodes WHERE task IS NOT NULL")
+        rows = cursor.fetchall()
     return [r[0] for r in rows if r[0]]
 
 
-def create_abstractions(sim_threshold: float = 0.7):
-    """Cluster similar primitive sequences and register new abstractions."""
+# Cache vectorizer to avoid recomputation
+_vectorizer_cache: dict[str, TfidfVectorizer] = {}
+
+
+def get_cached_vectorizer(cache_key: str = "default") -> TfidfVectorizer:
+    """Get or create a cached TF-IDF vectorizer."""
+    if cache_key not in _vectorizer_cache:
+        _vectorizer_cache[cache_key] = TfidfVectorizer(stop_words="english")
+    return _vectorizer_cache[cache_key]
+
+
+def create_abstractions(sim_threshold: float = TFIDF_SIM_THRESHOLD) -> list[dict]:
+    """
+    Cluster similar primitive sequences and register new abstractions.
+
+    Returns:
+        List of created abstractions.
+    """
     sequences = extract_sequences()
     if not sequences:
-        print("[ℹ️] No sequences found — add episodes first.")
-        return
+        logger.info("No sequences found - add episodes first")
+        return []
 
     vectorizer = TfidfVectorizer(stop_words="english")
     X = vectorizer.fit_transform(sequences)
 
-    clustering = DBSCAN(eps=0.7, min_samples=2, metric="cosine").fit(X)
+    clustering = DBSCAN(
+        eps=DBSCAN_EPS,
+        min_samples=DBSCAN_MIN_SAMPLES,
+        metric="cosine"
+    ).fit(X)
     labels = clustering.labels_
 
-    cluster_map = {}
+    cluster_map: dict[int, list[str]] = {}
     for label, seq in zip(labels, sequences):
         if label == -1:
             continue
@@ -101,80 +124,122 @@ def create_abstractions(sim_threshold: float = 0.7):
 
     new_abstractions = []
     for label, seqs in cluster_map.items():
-        joined = " | ".join(seqs)
         if len(seqs) >= 2:
+            joined = " | ".join(seqs)
             abstraction_name = f"abstract_{label}"
-            new_abstractions.append({"name": abstraction_name, "definition": joined})
-            print(f"[🧩] Created abstraction → {abstraction_name}")
+            new_abstractions.append({
+                "name": abstraction_name,
+                "definition": joined
+            })
+            logger.info(f"Created abstraction: {abstraction_name}")
 
-    # Persist abstractions
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS abstractions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            definition TEXT,
-            timestamp TEXT
-        )
-    """)
-    for abs_ in new_abstractions:
-        c.execute(
-            "INSERT INTO abstractions (name, definition, timestamp) VALUES (?, ?, ?)",
-            (abs_["name"], abs_["definition"], datetime.utcnow().isoformat()),
-        )
-    conn.commit()
-    conn.close()
-
+    # Batch persist abstractions
     if new_abstractions:
-        print(f"[✅] {len(new_abstractions)} new abstractions saved.")
+        with get_cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS abstractions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    definition TEXT,
+                    timestamp TEXT
+                )
+            """)
+
+            timestamp = datetime.utcnow().isoformat()
+            params = [
+                (abs_["name"], abs_["definition"], timestamp)
+                for abs_ in new_abstractions
+            ]
+            cursor.executemany(
+                "INSERT INTO abstractions (name, definition, timestamp) VALUES (?, ?, ?)",
+                params
+            )
+
+        logger.info(f"{len(new_abstractions)} new abstractions saved")
     else:
-        print("[ℹ️] No new abstractions discovered this round.")
+        logger.info("No new abstractions discovered this round")
+
+    return new_abstractions
 
 
 # ==========================================================
-# === Brick 5 : Analogy Validation ==========================
+# === Brick 5 : Analogy Validation =========================
 # ==========================================================
-def build_graph(task: dict):
+
+def build_graph(task: dict) -> nx.DiGraph:
     """Convert a task dict (nodes/edges) into a NetworkX DiGraph."""
     G = nx.DiGraph()
     for node in task.get("nodes", []):
-        G.add_node(node["id"], primitive=node.get("primitive", ""), params=node.get("params", {}))
+        G.add_node(
+            node["id"],
+            primitive=node.get("primitive", ""),
+            params=node.get("params", {})
+        )
     for edge in task.get("edges", []):
-        G.add_edge(edge["from"], edge["to"], condition=edge.get("condition", "always"))
+        G.add_edge(
+            edge["from"],
+            edge["to"],
+            condition=edge.get("condition", "always")
+        )
     return G
 
 
-def avg_tfidf_similarity(a_nodes, b_nodes):
-    """Compute average TF-IDF similarity between two node sets."""
-    texts_a = [" ".join([n.get("primitive", "")] + list(map(str, n.get("params", {}).values()))) for n in a_nodes]
-    texts_b = [" ".join([n.get("primitive", "")] + list(map(str, n.get("params", {}).values()))) for n in b_nodes]
+def compute_tfidf_similarity(texts_a: list[str], texts_b: list[str]) -> float:
+    """
+    Compute average TF-IDF similarity between two text sets.
+    Uses cached vectorizer for better performance.
+    """
+    if not texts_a or not texts_b:
+        return 0.0
+
     vectorizer = TfidfVectorizer(stop_words="english")
-    X = vectorizer.fit_transform(texts_a + texts_b)
+    all_texts = texts_a + texts_b
+    X = vectorizer.fit_transform(all_texts)
+
     n = len(texts_a)
     sim_matrix = (X * X.T).toarray()
     cross = sim_matrix[:n, n:]
     return float(np.mean(cross))
 
 
-def validate_analogy(task_a: dict, task_b: dict, sim_threshold: float = 0.7) -> bool:
+def avg_tfidf_similarity(a_nodes: list[dict], b_nodes: list[dict]) -> float:
+    """Compute average TF-IDF similarity between two node sets."""
+    texts_a = [
+        " ".join([n.get("primitive", "")] + list(map(str, n.get("params", {}).values())))
+        for n in a_nodes
+    ]
+    texts_b = [
+        " ".join([n.get("primitive", "")] + list(map(str, n.get("params", {}).values())))
+        for n in b_nodes
+    ]
+    return compute_tfidf_similarity(texts_a, texts_b)
+
+
+def validate_analogy(
+    task_a: dict,
+    task_b: dict,
+    sim_threshold: float = TFIDF_SIM_THRESHOLD
+) -> bool:
     """
     Return True if tasks are analogous both structurally (isomorphism)
-    and semantically (TF-IDF ≥ threshold).
+    and semantically (TF-IDF >= threshold).
     """
     G1, G2 = build_graph(task_a), build_graph(task_b)
 
-    iso = nx.is_isomorphic(G1, G2, node_match=lambda x, y: x["primitive"] == y["primitive"])
+    iso = nx.is_isomorphic(
+        G1, G2,
+        node_match=lambda x, y: x["primitive"] == y["primitive"]
+    )
     if not iso:
-        print("[❌] Graphs are not structurally analogous.")
+        logger.info("Graphs are not structurally analogous")
         return False
 
     sem_sim = avg_tfidf_similarity(task_a["nodes"], task_b["nodes"])
     if sem_sim >= sim_threshold:
-        print(f"[✅] Tasks are analogous (TF-IDF similarity = {sem_sim:.2f}).")
+        logger.info(f"Tasks are analogous (TF-IDF similarity = {sem_sim:.2f})")
         return True
     else:
-        print(f"[⚠️] Structural match found but low semantic similarity ({sem_sim:.2f}).")
+        logger.warning(f"Structural match but low semantic similarity ({sem_sim:.2f})")
         return False
 
 
@@ -192,7 +257,7 @@ if __name__ == "__main__":
     }
     validate_task_schema(sample_task)
 
-    # Abstraction creation (will show "no sequences" on first run)
+    # Abstraction creation
     create_abstractions()
 
     # Analogy validation demo

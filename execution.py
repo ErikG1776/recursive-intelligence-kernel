@@ -6,68 +6,68 @@ Provides single-connection exclusive transactions for
 safe multi-agent database access.
 """
 
-import sqlite3
-import os
-from contextlib import contextmanager
 from datetime import datetime
+from config import setup_logging, DB_PATH, DB_TIMEOUT
+from db import exclusive_lock, get_cursor
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
+logger = setup_logging("rik.execution")
 
 
 # ==========================================================
 # === Core Locking Utilities ===============================
 # ==========================================================
-@contextmanager
-def sqlite_lock(timeout: int = 30):
-    """
-    Opens one connection, takes exclusive control of the DB,
-    performs operations, then commits or rolls back safely.
-    """
-    conn = sqlite3.connect(DB_PATH, timeout=timeout)
-    conn.isolation_level = None  # Manual control
-    try:
-        conn.execute("BEGIN EXCLUSIVE")
-        yield conn
-        conn.commit()
-        print(f"[🔒] Transaction committed at {datetime.utcnow().isoformat()}")
-    except Exception as e:
-        conn.rollback()
-        print(f"[⚠️] Transaction rolled back due to: {e}")
-    finally:
-        conn.close()
 
-
-def execute_with_lock(query: str, params: tuple = ()):
+def execute_with_lock(query: str, params: tuple = ()) -> None:
     """
     Executes a simple SQL write operation under exclusive lock.
+
     Example:
         execute_with_lock("INSERT INTO ...", (val1, val2))
     """
-    with sqlite_lock() as conn:
+    with exclusive_lock() as conn:
         conn.execute(query, params)
+    logger.debug(f"Executed query with lock: {query[:50]}...")
+
+
+def execute_batch_with_lock(query: str, params_list: list[tuple]) -> int:
+    """
+    Execute batch operations under exclusive lock.
+
+    Args:
+        query: SQL query with placeholders.
+        params_list: List of parameter tuples.
+
+    Returns:
+        Number of rows affected.
+    """
+    with exclusive_lock() as conn:
+        cursor = conn.cursor()
+        cursor.executemany(query, params_list)
+        return cursor.rowcount
 
 
 # ==========================================================
 # === Demo Write Test ======================================
 # ==========================================================
-def _demo_write():
+
+def _demo_write() -> None:
     """Single-connection demo write to verify locking behavior."""
-    with sqlite_lock() as conn:
-        c = conn.cursor()
-        c.execute("""
+    with exclusive_lock() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS concurrency_test (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 message TEXT,
                 timestamp TEXT
             )
         """)
-        c.execute(
+        cursor.execute(
             "INSERT INTO concurrency_test (message, timestamp) VALUES (?, ?)",
             ("lock_test", datetime.utcnow().isoformat())
         )
-        print("[✅] Demo write completed.")
+    logger.info("Demo write completed successfully")
 
 
 if __name__ == "__main__":
-    print("[ℹ️] Testing SQLite concurrency lock system (final version)...")
+    logger.info("Testing SQLite concurrency lock system...")
     _demo_write()
