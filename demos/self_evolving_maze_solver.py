@@ -102,9 +102,11 @@ class MazeEnvironment:
             "position": self.agent_pos,
             "goal": self.goal,
             "valid_moves": self.get_valid_moves(),
-            "visited": list(self.visited)[-10:],  # Last 10 visited
+            "visited": list(self.visited),
             "distance_to_goal": abs(x - gx) + abs(y - gy),
-            "steps": self.steps
+            "steps": self.steps,
+            "maze": self.maze,  # Full maze access for pathfinding
+            "maze_size": len(self.maze)
         }
 
     def get_valid_moves(self) -> list[str]:
@@ -205,49 +207,35 @@ def choose_move(state):
 
     "bfs_optimal": '''
 def choose_move(state):
-    """BFS pathfinding - compute full path to goal."""
+    """BFS pathfinding - compute optimal path to goal."""
     from collections import deque
 
     start = state["position"]
     goal = state["goal"]
+    maze = state["maze"]
 
-    # Get maze layout from valid moves at each position
-    # This is a simplified BFS that works with the state we have
-    x, y = start
-    gx, gy = goal
-    moves = state["valid_moves"]
+    # BFS to find shortest path
+    queue = deque([(start, [])])
+    visited = {start}
 
-    # For now, use smart heuristic: prefer moves that decrease distance
-    # and haven't been visited
-    visited = set(tuple(v) for v in state["visited"])
+    while queue:
+        (x, y), path = queue.popleft()
 
-    best_move = moves[0]
-    best_score = float('inf')
+        if (x, y) == goal:
+            # Found goal - return first move
+            return path[0] if path else state["valid_moves"][0]
 
-    for move in moves:
-        dx, dy = {"UP": (0, -1), "DOWN": (0, 1), "LEFT": (-1, 0), "RIGHT": (1, 0)}[move]
-        new_pos = (x + dx, y + dy)
+        # Explore neighbors
+        for move, (dx, dy) in [("UP", (0, -1)), ("DOWN", (0, 1)),
+                                ("LEFT", (-1, 0)), ("RIGHT", (1, 0))]:
+            nx, ny = x + dx, y + dy
+            if (0 <= nx < len(maze[0]) and 0 <= ny < len(maze) and
+                maze[ny][nx] != "█" and (nx, ny) not in visited):
+                visited.add((nx, ny))
+                queue.append(((nx, ny), path + [move]))
 
-        # Distance to goal
-        dist = abs(new_pos[0] - gx) + abs(new_pos[1] - gy)
-
-        # Heavy penalty for visited
-        visit_penalty = 50 if new_pos in visited else 0
-
-        # Bonus for moving in goal direction
-        direction_bonus = 0
-        if (gx > x and dx > 0) or (gx < x and dx < 0):
-            direction_bonus -= 1
-        if (gy > y and dy > 0) or (gy < y and dy < 0):
-            direction_bonus -= 1
-
-        score = dist + visit_penalty + direction_bonus
-
-        if score < best_score:
-            best_score = score
-            best_move = move
-
-    return best_move
+    # No path found - fallback
+    return state["valid_moves"][0] if state["valid_moves"] else "UP"
 '''
 }
 
