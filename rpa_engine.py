@@ -181,6 +181,7 @@ class SelfHealingLocator:
 
             if loc is None:
                 strategy.record_failure()
+                print(f"    ❌ {strategy.name}({self.target}) → not applicable")
                 continue
 
             try:
@@ -190,12 +191,15 @@ class SelfHealingLocator:
                     # Success! Record it
                     strategy.record_success()
                     self.last_successful_strategy = strategy.name
+                    print(f"    ✅ {strategy.name}({self.target}) → found!")
                     return loc.first
                 else:
                     strategy.record_failure()
+                    print(f"    ❌ {strategy.name}({self.target}) → no match")
 
             except Exception as e:
                 strategy.record_failure()
+                print(f"    ❌ {strategy.name}({self.target}) → error")
 
         return None
 
