@@ -5,3 +5,4 @@ __pycache__/
 # Generated files
 demos/generated_*.py
 data/*.db
+demos/temp_site/
