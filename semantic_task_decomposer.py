@@ -36,9 +36,18 @@ DOMAIN_KEYWORDS = {
         "transformer", "attention", "gradient", "backprop", "loss", "accuracy"
     ],
     "philosophy": [
-        "meaning", "symbolic", "metaphor", "existence", "consciousness", "ethics",
-        "truth", "beauty", "wisdom", "spiritual", "soul", "mind", "being",
-        "philosophy", "epistemology", "ontology", "phenomenology", "taoism"
+        "meaning", "metaphor", "existence", "consciousness", "ethics",
+        "truth", "beauty", "wisdom", "mind", "being",
+        "philosophy", "epistemology", "ontology", "phenomenology", "logic",
+        "reason", "argument", "dialectic", "socratic", "platonic", "aristotle"
+    ],
+    "spirituality": [
+        "spiritual", "soul", "tao", "taoist", "taoism", "yin", "yang", "zen",
+        "buddhist", "buddhism", "meditation", "enlightenment", "karma", "dharma",
+        "chakra", "qi", "chi", "prana", "kundalini", "mantra", "sutra",
+        "kabbalah", "sephiroth", "mysticism", "mystic", "esoteric", "hermetic",
+        "alchemy", "sacred", "divine", "transcendence", "nirvana", "satori",
+        "advaita", "vedanta", "upanishad", "gnostic", "symbolic", "archetype"
     ],
     "design": [
         "design", "architect", "structure", "blueprint", "schema", "layout",
@@ -126,8 +135,8 @@ DOMAIN_DAG_TEMPLATES = {
     "philosophy": {
         "nodes": [
             {"id": "1", "primitive": "locate", "params": {"target": "conceptual_domain"}},
-            {"id": "2", "primitive": "transform", "params": {"operation": "semantic_analysis"}},
-            {"id": "3", "primitive": "transform", "params": {"operation": "symbolic_mapping"}},
+            {"id": "2", "primitive": "transform", "params": {"operation": "logical_analysis"}},
+            {"id": "3", "primitive": "transform", "params": {"operation": "argument_mapping"}},
             {"id": "4", "primitive": "validate", "params": {"check": "coherence_verify"}},
             {"id": "5", "primitive": "execute", "params": {"action": "synthesis_generate"}},
         ],
@@ -136,6 +145,23 @@ DOMAIN_DAG_TEMPLATES = {
             {"from": "2", "to": "3"},
             {"from": "3", "to": "4"},
             {"from": "4", "to": "5"},
+        ]
+    },
+    "spirituality": {
+        "nodes": [
+            {"id": "1", "primitive": "locate", "params": {"target": "spiritual_tradition"}},
+            {"id": "2", "primitive": "transform", "params": {"operation": "symbolic_extraction"}},
+            {"id": "3", "primitive": "transform", "params": {"operation": "archetypal_mapping"}},
+            {"id": "4", "primitive": "transform", "params": {"operation": "transcendent_synthesis"}},
+            {"id": "5", "primitive": "validate", "params": {"check": "wisdom_coherence"}},
+            {"id": "6", "primitive": "execute", "params": {"action": "insight_generate"}},
+        ],
+        "edges": [
+            {"from": "1", "to": "2"},
+            {"from": "2", "to": "3"},
+            {"from": "3", "to": "4"},
+            {"from": "4", "to": "5"},
+            {"from": "5", "to": "6"},
         ]
     },
     "design": {
@@ -249,7 +275,8 @@ def get_domain_description(domain: str) -> str:
         "optimization": "Performance improvement and resource optimization",
         "analysis": "Data analysis and pattern detection",
         "ml_ai": "Machine learning and AI model development",
-        "philosophy": "Philosophical and conceptual reasoning",
+        "philosophy": "Western philosophical and logical reasoning",
+        "spirituality": "Eastern wisdom, mysticism, and sacred traditions",
         "design": "Architecture and system design",
         "data": "Data engineering and ETL pipelines",
         "general": "General-purpose task processing"
@@ -264,11 +291,13 @@ if __name__ == "__main__":
     test_tasks = [
         "Analyze user onboarding workflow",
         "Design reinforcement learning reward function",
-        "Describe the symbolic meaning of the Tree of Life",
+        "Explain the Taoist concept of Yin and Yang",
+        "Describe Kantian categorical imperative",
         "Optimize inventory forecasting system",
         "Build microservices API gateway",
         "Analyze fraud detection patterns",
-        "Create ETL pipeline for customer data"
+        "Create ETL pipeline for customer data",
+        "Explore the Kabbalistic Tree of Life symbolism"
     ]
 
     print("\n🧠 Semantic Task Decomposition Test\n" + "="*50)
