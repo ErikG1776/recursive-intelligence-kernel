@@ -66,59 +66,57 @@ def demo_ssa_contracts(headless: bool = True):
         # Step 1: Navigate to search page
         print("📍 Step 1: Navigating to USASpending.gov search...")
         engine.navigate("https://www.usaspending.gov/search")
-        time.sleep(3)  # Wait for React app to load
+        time.sleep(4)  # Wait for React app to fully load
 
-        # Step 2: Look for and interact with filters
-        print("\n📍 Step 2: Looking for filter options...")
+        # Step 2: Interact with the page - try the Award Search tab
+        print("\n📍 Step 2: Finding searchable content...")
 
-        # Try to find fiscal year selector
-        print("  → Finding fiscal year filter...")
-        if engine.click("Time Period"):
-            print("  ✓ Found Time Period filter")
-            time.sleep(1)
+        # The page loads with spending by category - let's interact with what's visible
+        # Try clicking on visible spending categories
+        print("  → Looking for spending category links...")
 
-        # Try to find agency filter
-        print("  → Finding agency filter...")
-        if engine.click("Agency"):
-            print("  ✓ Found Agency filter")
-            time.sleep(1)
+        if engine.click("View Awards"):
+            print("  ✓ Found View Awards button")
+            time.sleep(2)
+        elif engine.click("Contracts"):
+            print("  ✓ Found Contracts section")
+            time.sleep(2)
+        elif engine.click("Award Search"):
+            print("  ✓ Clicked Award Search")
+            time.sleep(2)
 
-            # Try to search for SSA
-            print("  → Searching for 'Social Security'...")
-            if engine.fill("Search agencies", "Social Security"):
-                print("  ✓ Entered search term")
-                time.sleep(1)
+        # Step 3: Try to interact with filter sidebar
+        print("\n📍 Step 3: Exploring filter options...")
 
-        # Step 3: Look for search/submit button
-        print("\n📍 Step 3: Submitting search...")
+        # Look for expandable filter sections - they use specific class patterns
+        filters_found = 0
 
-        # Try various ways to submit
-        submit_found = (
-            engine.click("Submit") or
-            engine.click("Search") or
-            engine.click("Apply") or
-            engine.click("Update Results")
-        )
+        # Try clicking filter section headers (these are usually buttons/links)
+        for filter_name in ["Keyword", "Award Type", "Location", "Recipient"]:
+            print(f"  → Trying {filter_name} filter...")
+            if engine.click(filter_name):
+                print(f"  ✓ Found {filter_name}")
+                filters_found += 1
+                time.sleep(0.5)
 
-        if submit_found:
-            print("  ✓ Search submitted")
-            time.sleep(3)  # Wait for results
-        else:
-            print("  ⚠ Could not find submit button, continuing...")
+        if filters_found == 0:
+            print("  ⚠ Filters may be in collapsed state, exploring page...")
 
-        # Step 4: Try to extract results
-        print("\n📍 Step 4: Extracting results...")
+        # Step 4: Extract any visible data
+        print("\n📍 Step 4: Extracting visible content...")
 
-        # Look for result items
-        result_text = engine.get_text("results")
-        if result_text:
-            print(f"  ✓ Found results section")
-            extracted_data.append({
-                "type": "results_summary",
-                "content": result_text[:200]
-            })
+        # Look for spending amounts, counts, or summary text
+        for target in ["spending", "awards", "results", "total"]:
+            text = engine.get_text(target)
+            if text and len(text) > 10:
+                print(f"  ✓ Found {target} data")
+                extracted_data.append({
+                    "type": target,
+                    "content": text[:300]
+                })
+                break
 
-        # Try to find table data
+        # Try to get any table or list data
         table_text = engine.get_text("table")
         if table_text:
             print(f"  ✓ Found table data")
