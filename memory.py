@@ -1,7 +1,7 @@
 """
-memory.py | Recursive Intelligence Kernel (RIK) v5.0
---------------------------------------------------------------------
-Manages multi-type memory persistence for the Recursive Intelligence Kernel.
+memory.py | Recursive Intelligence Algorithm (RIA) v5.0
+-----------------------------------------------------------------------
+Manages multi-type memory persistence for the Recursive Intelligence Algorithm.
 Handles episodic storage, semantic mappings, and dependency-aware consolidation.
 """
 

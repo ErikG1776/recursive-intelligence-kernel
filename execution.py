@@ -1,5 +1,5 @@
 """
-execution.py | Recursive Intelligence Kernel (RIK) v5.0
+execution.py | Recursive Intelligence Algorithm (RIA) v5.0
 Brick 9: Concurrency Locks (final stable version)
 ------------------------------------------------------------
 Provides single-connection exclusive transactions for

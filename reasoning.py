@@ -1,5 +1,5 @@
 """
-reasoning.py  |  Recursive Intelligence Kernel (RIK) v5.0
+reasoning.py  |  Recursive Intelligence Algorithm (RIA) v5.0
 Bricks 2-5: Grammar Validation + Abstraction Creation + Analogy Validation
 ---------------------------------------------------------------------------
 Provides:

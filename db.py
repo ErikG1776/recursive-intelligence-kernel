@@ -1,6 +1,6 @@
 """
-db.py | Recursive Intelligence Kernel (RIK) v5.0
--------------------------------------------------
+db.py | Recursive Intelligence Algorithm (RIA) v5.0
+----------------------------------------------------
 Database connection management with proper context managers and pooling.
 """
 

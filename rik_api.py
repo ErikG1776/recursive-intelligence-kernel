@@ -1,7 +1,7 @@
 """
-rik_api.py | Recursive Intelligence Kernel API
------------------------------------------------
-FastAPI wrapper exposing the RIK reasoning and feedback endpoints.
+rik_api.py | Recursive Intelligence Algorithm API
+--------------------------------------------------
+FastAPI wrapper exposing the RIA reasoning and feedback endpoints.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -20,8 +20,8 @@ from db import create_indexes
 logger = setup_logging("rik.api")
 
 app = FastAPI(
-    title="Recursive Intelligence Kernel API",
-    description="FastAPI wrapper exposing the RIK reasoning and feedback endpoints.",
+    title="Recursive Intelligence Algorithm API",
+    description="FastAPI wrapper exposing the RIA reasoning and feedback endpoints.",
     version="5.2.1"
 )
 

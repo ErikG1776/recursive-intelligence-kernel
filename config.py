@@ -1,6 +1,6 @@
 """
-config.py | Recursive Intelligence Kernel (RIK) v5.0
-------------------------------------------------------
+config.py | Recursive Intelligence Algorithm (RIA) v5.0
+--------------------------------------------------------
 Centralized configuration for database paths, constants, and settings.
 """
 

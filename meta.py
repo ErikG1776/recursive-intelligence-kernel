@@ -1,5 +1,5 @@
 """
-meta.py | Recursive Intelligence Kernel (RIK) v5.0
+meta.py | Recursive Intelligence Algorithm (RIA) v5.0
 Bricks 1 & 6 & 7: Rollback Mechanism + Architecture Visualization + Fitness Function
 -------------------------------------------------------------------------------------
 Provides:

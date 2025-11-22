@@ -1,8 +1,8 @@
 """
-main.py | Recursive Intelligence Kernel (RIK) Entry Point
---------------------------------------------------------------------
+main.py | Recursive Intelligence Algorithm (RIA) Entry Point
+---------------------------------------------------------------------
 This module serves as the top-level orchestrator for the Recursive
-Intelligence Kernel. It can be called directly or through the API
+Intelligence Algorithm. It can be called directly or through the API
 (`rik_api.py`) to execute a recursive reasoning loop.
 
 Core flow:
