@@ -21,9 +21,9 @@ import os
 import sys
 import time
 import random
-import importlib
+import importlib.util
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from collections import deque
 
@@ -280,7 +280,7 @@ class SelfModifyingAgent:
         full_code = f'''"""
 Generated Strategy: {name}
 Generation: {self.generation}
-Timestamp: {datetime.utcnow().isoformat()}
+Timestamp: {datetime.now(timezone.utc).isoformat()}
 """
 
 {code}
