@@ -90,7 +90,7 @@ def create_abstractions(sim_threshold: float = 0.7):
     vectorizer = TfidfVectorizer(stop_words="english")
     X = vectorizer.fit_transform(sequences)
 
-    clustering = DBSCAN(eps=0.7, min_samples=2, metric="cosine").fit(X)
+    clustering = DBSCAN(eps=0.4, min_samples=2, metric="cosine").fit(X)
     labels = clustering.labels_
 
     cluster_map = {}
