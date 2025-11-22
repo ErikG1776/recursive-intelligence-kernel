@@ -58,7 +58,7 @@ class MazeEnvironment:
         self.agent_pos = self.start
         self.visited = set()
         self.steps = 0
-        self.max_steps = 150 * difficulty
+        self.max_steps = 80 * difficulty  # Tighter timeout to force evolution
         self.move_history = []
 
     def _generate_maze(self, difficulty: int) -> list[list[str]]:
@@ -506,7 +506,7 @@ def run_demo():
 
     for episode in range(max_episodes):
         # Create maze (progressive difficulty)
-        difficulty = 1 + (episode // 4)
+        difficulty = 1 + (episode // 3)  # Increase difficulty faster
         env = MazeEnvironment(difficulty=difficulty)
 
         # Run episode
@@ -522,7 +522,7 @@ def run_demo():
             print(f"\n  \033[91m✗ FAILED\033[0m after {result.get('steps', 0)} steps")
 
             # Evolve after failures
-            if consecutive_failures >= 2:
+            if consecutive_failures >= 1:  # Evolve faster
                 print("\n  \033[95m🧬 EVOLVING - Generating new strategy code...\033[0m")
                 time.sleep(1)
 
