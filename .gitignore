@@ -1,0 +1,7 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated files
+demos/generated_*.py
+data/*.db
