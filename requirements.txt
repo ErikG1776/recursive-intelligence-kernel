@@ -10,5 +10,11 @@ uvicorn>=0.15.0
 # Browser Automation (for demos)
 selenium>=4.0.0
 
+# OCR / PDF Processing
+pymupdf>=1.22.0
+
+# Dataset Downloads
+kaggle>=1.5.0
+
 # Database
 # (uses built-in sqlite3)
