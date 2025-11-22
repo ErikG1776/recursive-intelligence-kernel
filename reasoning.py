@@ -74,7 +74,7 @@ def extract_sequences():
     """Retrieve prior task sequences (primitive patterns) from episodes table."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT description FROM episodes")
+    c.execute("SELECT task FROM episodes")
     rows = c.fetchall()
     conn.close()
     return [r[0] for r in rows if r[0]]

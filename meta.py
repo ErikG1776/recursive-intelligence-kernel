@@ -1,16 +1,17 @@
 """
 meta.py | Recursive Intelligence Kernel (RIK) v5.0
-Bricks 1 & 6: Rollback Mechanism + Architecture Visualization
--------------------------------------------------------------
+Bricks 1, 6 & 7: Rollback Mechanism + Architecture Visualization + Fitness Evaluation
+-------------------------------------------------------------------------------------
 Provides:
 1. Safe code modification and rollback system
 2. Mermaid.js visualization of current ADL architecture
+3. Fitness evaluation for system performance metrics
 """
 
 import os
 import sqlite3
+import random
 from datetime import datetime
-import json
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
 
@@ -132,29 +133,14 @@ def visualize_architecture(adl_schema: dict = None, save_path: str = "architectu
 
 
 # ==========================================================
-# === Manual Test Runner ===================================
+# === Brick 7: Fitness Evaluation ==========================
 # ==========================================================
-if __name__ == "__main__":
-    # Test rollback system initialization
-    print("[ℹ️] Rollback system ready. Database verified at:", DB_PATH)
-
-    # Generate test architecture diagram
-    visualize_architecture()
-    """
-Brick 7 — Fitness Function
---------------------------------------------
-Simulates architecture performance and assigns
-a fitness score based on efficiency + robustness.
-"""
-
-import random
 
 def evaluate_fitness():
     """
     Simulates architecture performance metrics and stores
     a fitness score (efficiency + robustness) / 2 in the DB.
     """
-    # Simulated performance metrics (0–1 range)
     efficiency = round(random.uniform(0.8, 1.0), 3)
     robustness = round(random.uniform(0.8, 1.0), 3)
     fitness_score = round((efficiency + robustness) / 2, 3)
@@ -188,7 +174,9 @@ def evaluate_fitness():
     return fitness_score
 
 
-# Extend the manual test runner
+# ==========================================================
+# === Manual Test Runner ===================================
+# ==========================================================
 if __name__ == "__main__":
     print("[ℹ️] Rollback system ready. Database verified at:", DB_PATH)
     visualize_architecture()

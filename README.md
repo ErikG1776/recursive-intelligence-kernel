@@ -114,9 +114,10 @@ Once the Recursive Intelligence Kernel API is running (see `/rik_api.py`), devel
 ### Installation
 ```bash
 pip install rik-sdk
+```
 
-Example Usage
-
+### Example Usage
+```python
 from rik_sdk.client import RIKClient
 
 rik = RIKClient(base_url="http://127.0.0.1:8000")
@@ -132,6 +133,7 @@ print(metrics)
 # Retrieve recent memory entries
 memory = rik.get_memory()
 print(memory)
+```
 
 The SDK abstracts all API communication so developers can interact with the Recursive Intelligence Kernel as a local or remote service without writing any HTTP code.
 

@@ -19,6 +19,9 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "data", "memory.db")
 def run_integration_test():
     print("\n🧩  Starting RIK v5.0 Integration Test...\n")
 
+    # 0️⃣ Initialize database
+    memory.init_memory_db()
+
     # 1️⃣ Validate a task
     task = {
         "nodes": [
@@ -30,8 +33,11 @@ def run_integration_test():
     reasoning.validate_task_schema(task)
 
     # 2️⃣ Save a mock episode
-    description = "Integration Test Run — " + datetime.now().isoformat()
-    memory.save_episode(description=description)
+    memory.save_episode(
+        task="Integration Test Run",
+        result="success",
+        reflection=f"RIK integration test completed at {datetime.now().isoformat()}"
+    )
 
     # 3️⃣ Execute a safe write using concurrency lock
     execution.execute_with_lock(

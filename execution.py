@@ -44,6 +44,14 @@ def execute_with_lock(query: str, params: tuple = ()):
         execute_with_lock("INSERT INTO ...", (val1, val2))
     """
     with sqlite_lock() as conn:
+        # Ensure concurrency_test table exists for testing
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS concurrency_test (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message TEXT,
+                timestamp TEXT
+            )
+        """)
         conn.execute(query, params)
 
 
