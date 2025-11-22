@@ -108,7 +108,7 @@ curl -X POST http://localhost:8000/run_task \
 
 ## Demo Suite
 
-We've built **11 demos** proving RIA works across domains:
+We've built **12 demos** proving RIA works across domains:
 
 ### Core Concepts
 | Demo | What It Shows | Run Command |
@@ -122,6 +122,13 @@ We've built **11 demos** proving RIA works across domains:
 |------|---------------|-------------|
 | **Adaptive Scraper** | Web scraper survives site changes | `python demos/adaptive_scraper.py --auto` |
 | **Self-Healing RPA** | UI automation survives redesigns | `python demos/self_healing_rpa.py --auto` |
+| **USASpending Demo** | Live RPA on federal government site | `python usaspending_demo.py --visible` |
+
+### Production RPA Engine
+| File | Description |
+|------|-------------|
+| `rpa_engine.py` | Production-ready self-healing RPA engine with 9 locator strategies |
+| `usaspending_demo.py` | Live demo on USASpending.gov (real federal site) |
 
 ### Autonomous Code Evolution
 | Demo | What It Shows | Run Command |
@@ -184,7 +191,10 @@ recursive-intelligence-kernel/
 ├── rik_api.py         # REST API
 ├── main.py            # Entry point
 │
-├── demos/             # 11 demonstration scripts
+├── rpa_engine.py      # Production self-healing RPA engine
+├── usaspending_demo.py # Live demo on federal site
+│
+├── demos/             # 12 demonstration scripts
 │   ├── snake_evolution.py
 │   ├── multi_agent_codesign.py
 │   └── ...

@@ -1,6 +1,6 @@
 # RIA Demo Suite
 
-This directory contains 11 demonstrations of the Recursive Intelligence Algorithm across different domains.
+This directory contains 12 demonstrations of the Recursive Intelligence Algorithm across different domains.
 
 ---
 
@@ -94,6 +94,27 @@ python demos/self_healing_rpa.py --auto
 **Results:** 62% success rate, evolves through 6 locator strategies
 
 **Key Concepts:** Playwright automation, multi-strategy locators, UI adaptation
+
+---
+
+#### USASpending.gov Live Demo
+**File:** `../usaspending_demo.py`
+
+Production RPA demo on a real federal government website (React SPA).
+
+```bash
+python usaspending_demo.py --visible
+```
+
+**Results:** 50% success rate, learns best strategies in real-time
+
+**Key Concepts:** Live website automation, visibility detection, strategy learning
+
+**Features:**
+- 9 self-healing locator strategies
+- Automatic visibility filtering
+- Real-time strategy effectiveness logging
+- Episodic memory for cross-session learning
 
 ---
 
