@@ -351,7 +351,7 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
 # === DEMO =================================================
 # ==========================================================
 
-def run_demo():
+def run_demo(interactive: bool = True):
     print("\033[2J\033[H")
 
     print("""
@@ -373,7 +373,10 @@ def run_demo():
     ╚══════════════════════════════════════════════════════════╝
     """)
 
-    input("  Press ENTER to start...")
+    if interactive:
+        input("  Press ENTER to start...")
+    else:
+        time.sleep(1)
 
     init_memory_db()
     agent = AdaptiveScraperAgent()
@@ -431,7 +434,10 @@ def run_demo():
             print(f"  \033[95m   New strategy: {new_strategy}\033[0m")
             agent.show_code()
 
-            input("  Press ENTER to test new strategy...")
+            if interactive:
+                input("  Press ENTER to test new strategy...")
+            else:
+                time.sleep(0.5)
             continue
 
         print()
@@ -482,7 +488,8 @@ def run_demo():
 
 if __name__ == "__main__":
     try:
-        run_demo()
+        interactive = "--auto" not in sys.argv
+        run_demo(interactive=interactive)
     except KeyboardInterrupt:
         print("\n\n  Demo interrupted.")
     except Exception as e:
