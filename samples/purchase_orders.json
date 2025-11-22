@@ -1,0 +1,25 @@
+{
+  "purchase_orders": [
+    {
+      "po_number": "PO-2024-0038",
+      "vendor": "TechSupply Inc",
+      "date": "2024-01-10",
+      "approved_amount": 7100.00,
+      "status": "approved"
+    },
+    {
+      "po_number": "PO-2024-0042",
+      "vendor": "ACME Corp",
+      "date": "2024-01-12",
+      "approved_amount": 2800.00,
+      "status": "approved"
+    },
+    {
+      "po_number": "PO-2024-0045",
+      "vendor": "Office Supplies Co",
+      "date": "2024-01-14",
+      "approved_amount": 500.00,
+      "status": "pending"
+    }
+  ]
+}
