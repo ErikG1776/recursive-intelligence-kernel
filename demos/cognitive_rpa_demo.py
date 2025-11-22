@@ -306,7 +306,8 @@ def run_demo():
         print(f"{Colors.BOLD}{Colors.WHITE}  DEMO: What RIK Can Do That Traditional RPA Cannot{Colors.RESET}")
         print(f"{Colors.CYAN}{'='*60}{Colors.RESET}")
 
-        input(f"\n{Colors.YELLOW}Press ENTER to start demo...{Colors.RESET}")
+        print(f"\n{Colors.YELLOW}Starting demo in 3 seconds...{Colors.RESET}")
+        time.sleep(3)
 
         # === DEMO 1: Basic extraction with learning ===
         def extract_acme():
@@ -320,7 +321,7 @@ def run_demo():
             extract_acme
         )
 
-        input(f"\n{Colors.YELLOW}Press ENTER for next task...{Colors.RESET}")
+        time.sleep(2)
 
         # === DEMO 2: Similar task shows cross-learning ===
         def extract_techsupply():
@@ -334,7 +335,7 @@ def run_demo():
             extract_techsupply
         )
 
-        input(f"\n{Colors.YELLOW}Press ENTER for failure/recovery demo...{Colors.RESET}")
+        time.sleep(2)
 
         # === DEMO 3: Intentional failure to show self-healing ===
         # Hide the validate button to simulate element not found
@@ -355,7 +356,7 @@ def run_demo():
         # Restore element
         bot.driver.execute_script("window.restoreElement()")
 
-        input(f"\n{Colors.YELLOW}Press ENTER for view details task...{Colors.RESET}")
+        time.sleep(2)
 
         # === DEMO 4: Another task to show fitness improvement ===
         def view_details():
@@ -402,7 +403,8 @@ def run_demo():
         print(f"\n{Colors.DIM}Memory stored in: data/memory.db{Colors.RESET}")
         print(f"{Colors.DIM}View episodes: sqlite3 data/memory.db 'SELECT * FROM episodes'{Colors.RESET}")
 
-        input(f"\n{Colors.YELLOW}Press ENTER to close browser...{Colors.RESET}")
+        print(f"\n{Colors.YELLOW}Demo complete. Browser closing in 5 seconds...{Colors.RESET}")
+        time.sleep(5)
 
     finally:
         bot.stop_browser()
