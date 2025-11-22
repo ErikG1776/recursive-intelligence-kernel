@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Management Portal - Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #3498db;
+        }
+
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .invoice-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .invoice-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+
+        .invoice-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .invoice-info h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .invoice-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .invoice-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .invoice-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .invoice-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #bdc3c7;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        /* Invoice Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .invoice-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .invoice-detail-table th,
+        .invoice-detail-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .invoice-detail-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .total-row {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        /* Flaky element for demo */
+        .flaky-element {
+            /* This element will sometimes be hidden to trigger fallback */
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Processing indicator */
+        .processing-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .processing-indicator.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Result display */
+        #extraction-result {
+            display: none;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        #extraction-result.active {
+            display: block;
+        }
+
+        #extraction-result pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 Invoice Management Portal</h1>
+            <nav class="nav">
+                <a href="#" class="active" id="nav-invoices">Invoices</a>
+                <a href="#" id="nav-upload">Upload</a>
+                <a href="#" id="nav-reports">Reports</a>
+            </nav>
+        </header>
+
+        <div class="content">
+            <div class="processing-indicator" id="processing">
+                <div class="spinner"></div>
+                <p>Processing invoice...</p>
+            </div>
+
+            <div class="invoice-list" id="invoice-list">
+                <!-- Invoice 1: ACME Corp -->
+                <div class="invoice-card" data-invoice-id="INV-2024-001">
+                    <div class="invoice-info">
+                        <h3>INV-2024-001 - ACME Corp</h3>
+                        <div class="invoice-meta">
+                            <span>📅 Jan 15, 2024</span>
+                            <span>📋 PO-2024-0042</span>
+                            <span class="status-badge status-pending">Pending</span>
+                        </div>
+                        <div class="invoice-actions">
+                            <button class="btn btn-primary" onclick="viewInvoice('INV-2024-001')">View Details</button>
+                            <button class="btn btn-secondary extract-btn" data-id="INV-2024-001">Extract Data</button>
+                            <button class="btn btn-secondary" onclick="approveInvoice('INV-2024-001')">Approve</button>
+                        </div>
+                    </div>
+                    <div class="invoice-amount" id="amount-INV-2024-001">$2,781.00</div>
+                </div>
+
+                <!-- Invoice 2: TechSupply -->
+                <div class="invoice-card" data-invoice-id="VB-88431">
+                    <div class="invoice-info">
+                        <h3>VB-88431 - TechSupply Inc</h3>
+                        <div class="invoice-meta">
+                            <span>📅 Jan 18, 2024</span>
+                            <span>📋 PO-2024-0038</span>
+                            <span class="status-badge status-approved">Approved</span>
+                        </div>
+                        <div class="invoice-actions">
+                            <button class="btn btn-primary" onclick="viewInvoice('VB-88431')">View Details</button>
+                            <button class="btn btn-secondary extract-btn" data-id="VB-88431">Extract Data</button>
+                            <button class="btn btn-secondary flaky-element" id="validate-btn-VB-88431" onclick="validatePO('VB-88431')">Validate PO</button>
+                        </div>
+                    </div>
+                    <div class="invoice-amount" id="amount-VB-88431">$7,020.00</div>
+                </div>
+
+                <!-- Invoice 3: Problem invoice for fallback demo -->
+                <div class="invoice-card" data-invoice-id="INV-2024-003">
+                    <div class="invoice-info">
+                        <h3>INV-2024-003 - GlobalTech Solutions</h3>
+                        <div class="invoice-meta">
+                            <span>📅 Jan 20, 2024</span>
+                            <span>📋 PO-2024-0051</span>
+                            <span class="status-badge status-processing">Processing</span>
+                        </div>
+                        <div class="invoice-actions">
+                            <button class="btn btn-primary" onclick="viewInvoice('INV-2024-003')">View Details</button>
+                            <button class="btn btn-secondary extract-btn" data-id="INV-2024-003">Extract Data</button>
+                            <!-- This button intentionally missing ID for fallback demo -->
+                            <button class="btn btn-danger">Flag Issue</button>
+                        </div>
+                    </div>
+                    <div class="invoice-amount" id="amount-INV-2024-003">$4,250.00</div>
+                </div>
+            </div>
+
+            <div id="extraction-result">
+                <h3>Extracted Data</h3>
+                <pre id="extracted-data"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Detail Modal -->
+    <div class="modal" id="invoice-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Invoice Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Invoice data store
+        const invoices = {
+            'INV-2024-001': {
+                id: 'INV-2024-001',
+                vendor: 'ACME Corp',
+                date: '2024-01-15',
+                dueDate: '2024-02-15',
+                poNumber: 'PO-2024-0042',
+                lineItems: [
+                    {description: 'Widget Type A', qty: 100, price: 12.50, total: 1250.00},
+                    {description: 'Widget Type B', qty: 50, price: 25.00, total: 1250.00},
+                    {description: 'Shipping', qty: 1, price: 75.00, total: 75.00}
+                ],
+                subtotal: 2575.00,
+                tax: 206.00,
+                total: 2781.00,
+                status: 'pending'
+            },
+            'VB-88431': {
+                id: 'VB-88431',
+                vendor: 'TechSupply Inc',
+                date: '2024-01-18',
+                dueDate: '2024-02-17',
+                poNumber: 'PO-2024-0038',
+                lineItems: [
+                    {description: 'Server Maintenance Q1', qty: 1, price: 5000.00, total: 5000.00},
+                    {description: 'Software License Renewal', qty: 10, price: 150.00, total: 1500.00}
+                ],
+                subtotal: 6500.00,
+                tax: 520.00,
+                total: 7020.00,
+                status: 'approved'
+            },
+            'INV-2024-003': {
+                id: 'INV-2024-003',
+                vendor: 'GlobalTech Solutions',
+                date: '2024-01-20',
+                dueDate: '2024-02-19',
+                poNumber: 'PO-2024-0051',
+                lineItems: [
+                    {description: 'Cloud Infrastructure Setup', qty: 1, price: 3500.00, total: 3500.00},
+                    {description: 'Configuration & Testing', qty: 5, price: 150.00, total: 750.00}
+                ],
+                subtotal: 4250.00,
+                tax: 0.00,
+                total: 4250.00,
+                status: 'processing'
+            }
+        };
+
+        function viewInvoice(id) {
+            const invoice = invoices[id];
+            if (!invoice) return;
+
+            document.getElementById('modal-title').textContent = `Invoice ${invoice.id}`;
+
+            let lineItemsHtml = invoice.lineItems.map(item => `
+                <tr>
+                    <td>${item.description}</td>
+                    <td>${item.qty}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>$${item.total.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('modal-body').innerHTML = `
+                <p><strong>Vendor:</strong> ${invoice.vendor}</p>
+                <p><strong>Date:</strong> ${invoice.date}</p>
+                <p><strong>Due Date:</strong> ${invoice.dueDate}</p>
+                <p><strong>PO Number:</strong> ${invoice.poNumber}</p>
+
+                <table class="invoice-detail-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${lineItemsHtml}
+                        <tr>
+                            <td colspan="3" style="text-align: right;">Subtotal:</td>
+                            <td>$${invoice.subtotal.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align: right;">Tax:</td>
+                            <td>$${invoice.tax.toFixed(2)}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="3" style="text-align: right;">Total:</td>
+                            <td>$${invoice.total.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('invoice-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('invoice-modal').classList.remove('active');
+        }
+
+        function extractData(id) {
+            const invoice = invoices[id];
+            if (!invoice) return;
+
+            document.getElementById('processing').classList.add('active');
+
+            setTimeout(() => {
+                document.getElementById('processing').classList.remove('active');
+                document.getElementById('extracted-data').textContent = JSON.stringify(invoice, null, 2);
+                document.getElementById('extraction-result').classList.add('active');
+            }, 1500);
+        }
+
+        function approveInvoice(id) {
+            alert(`Invoice ${id} approved!`);
+        }
+
+        function validatePO(id) {
+            alert(`PO validated for invoice ${id}`);
+        }
+
+        // Add click handlers for extract buttons
+        document.querySelectorAll('.extract-btn').forEach(btn => {
+            btn.addEventListener('click', () => extractData(btn.dataset.id));
+        });
+
+        // Close modal on outside click
+        document.getElementById('invoice-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'invoice-modal') closeModal();
+        });
+
+        // Simulate flaky element (hide validate button randomly for demo)
+        // This can be triggered by Selenium to demonstrate fallback
+        window.makeElementFlaky = function() {
+            const btn = document.getElementById('validate-btn-VB-88431');
+            if (btn) btn.classList.add('hidden');
+        };
+
+        window.restoreElement = function() {
+            const btn = document.getElementById('validate-btn-VB-88431');
+            if (btn) btn.classList.remove('hidden');
+        };
+    </script>
+</body>
+</html>

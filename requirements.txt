@@ -1,0 +1,14 @@
+# RIK Core Dependencies
+numpy>=1.21.0
+scikit-learn>=1.0.0
+sentence-transformers>=2.2.0
+
+# Web Framework
+fastapi>=0.68.0
+uvicorn>=0.15.0
+
+# Browser Automation (for demos)
+selenium>=4.0.0
+
+# Database
+# (uses built-in sqlite3)
