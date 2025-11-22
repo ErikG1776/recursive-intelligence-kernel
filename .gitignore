@@ -1,12 +1,33 @@
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 
-# Generated files
-demos/generated_*.py
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Database files
 data/*.db
-demos/temp_site/
+
+# Generated demo files
 demos/generated_*.py
+demos/temp_site/
 demos/code_under_test.py
 demos/attacker_code.py
 demos/defender_code.py
@@ -14,3 +35,11 @@ demos/fixer_strategy.py
 demos/evolved_agent.py
 demos/codesign_temp.py
 demos/replication_temp.py
+
+# Logs and reports
+*.log
+reports/
+
+# OS files
+.DS_Store
+Thumbs.db

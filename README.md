@@ -1,181 +1,308 @@
-# 🧠 Recursive Intelligence Kernel (RIK) v5.0  
-Autonomous, self-evaluating agent kernel for recursive intelligence research and adaptive system design.
+# Recursive Intelligence Algorithm (RIA)
+
+> **Self-improving AI systems that learn, adapt, and evolve autonomously.**
 
 ---
 
-## ✨ Overview
+## What is RIA?
 
-**RIK** is a lightweight, model-agnostic **recursive intelligence framework** that demonstrates the full cognitive feedback loop:
-> **Observe → Reason → Act → Reflect → Adapt**
+**Recursive Intelligence Algorithm** is an engineering paradigm where AI systems improve themselves through continuous feedback loops:
 
-Built for researchers, developers, and alignment teams exploring the mechanics of self-improving AI systems, RIK provides a transparent, auditable kernel capable of autonomous learning and self-optimization without external orchestration frameworks.
+```
+Observe → Reason → Act → Reflect → Adapt → (repeat)
+```
+
+Unlike traditional AI that requires retraining, RIA systems:
+- **Learn from failures** in real-time
+- **Evolve strategies** based on outcomes
+- **Self-modify code** to improve performance
+- **Accumulate knowledge** across sessions
 
 ---
 
-## 🧩 Core Architecture
+## Why This Matters
 
-```mermaid
-graph TD
-    Meta-Controller --> Reasoning-Engine
-    Reasoning-Engine --> Memory-Systems
-    Reasoning-Engine --> Execution-Layer
-    Memory-Systems --> Fallback-System
-    Execution-Layer --> Fallback-System
-    Fallback-System --> Meta-Controller
-```
+| Traditional AI | Recursive Intelligence |
+|----------------|------------------------|
+| Static after training | Continuously improves |
+| Fails on edge cases | Learns from failures |
+| Requires human intervention | Self-healing |
+| One-size-fits-all | Adapts to context |
 
-| Layer | Module | Function |
-|-------|---------|-----------|
-| **Meta-Controller** | `meta.py` | Evaluates fitness, manages rollback, generates architecture diagrams |
-| **Reasoning Engine** | `reasoning.py` | Decomposes tasks, validates schema, builds adaptive plans |
-| **Memory Systems** | `memory.py` | Stores episodic, semantic, procedural, and modification data |
-| **Execution Layer** | `execution.py` | Runs asynchronous primitives with concurrency control |
-| **Fallback System** | `fallback.py` | Diagnoses failures and generates causal recovery strategies |
-| **Learning / Reflection** | `self_updating_confidence.py` | Updates confidence weights and strategy effectiveness |
-| **Audit + Reporting** | `integration_examples/` | Generates learning charts, audit logs, and performance reports |
+**Commercial Applications:**
+- Self-healing automation (RPA that survives UI changes)
+- Adaptive web scrapers (handles site redesigns)
+- Autonomous code repair (finds and fixes bugs)
+- Evolving game AI (improves with each game)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1️⃣ Local Run (Python)
-```bash
-python3 integration_test.py
-```
-
-This executes the **Recursive Intelligence Kernel integration test**, validating all subsystems and printing real-time reasoning metrics.
-
-Expected output:
-
-```
-[✅] Task validated successfully
-[⚙️] Executing reasoning loop
-[🩺] Diagnosed error → fallback engaged
-[🚀] Executed best strategy → success
-[📈] Efficiency: 0.97 | Robustness: 0.83 | Fitness Score: 0.90
-[🧠] Updated strategy weights → learning report generated
-```
-
-Artifacts:
-- `data/memory.db` → Synthetic memory and learned weights  
-- `architecture_diagram.mmd` → Self-generated system diagram  
-- `integration_examples/reports/learning_report.txt` → Reflective summary  
-
----
-
-### 2️⃣ Docker Compose (Optional)
-
-Run the kernel and watchdog as services:
+### Run a Demo (30 seconds)
 
 ```bash
-docker compose up --build -d
+# Clone the repo
+git clone https://github.com/ErikG1776/recursive-intelligence-kernel.git
+cd recursive-intelligence-kernel
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the self-evolving snake game
+python demos/snake_evolution.py --auto --games 30
 ```
 
-**Services**
-- `rik-agent` → Executes the kernel loop  
-- `watchdog` → Monitors runtime, prevents runaway recursion  
+You'll see an agent evolve from random movement (0 avg score) to pathfinding (60+ avg score) in under a minute.
 
----
+### Run the Core API
 
-## 📊 Outputs & Self-Evaluation
-
-| Artifact | Description |
-|-----------|--------------|
-| `audit_logs/*.json` | Structured, time-stamped run data |
-| `reports/learning_progress.png` | Visualization of recursive improvement |
-| `memory.db` | Persistent multi-type memory store |
-| `architecture_diagram.mmd` | Mermaid system diagram (self-generated) |
-
----
-
-## 🧬 Key Features
-- **Self-reflective execution loop** — every run refines internal reasoning  
-- **Adaptive fallback recovery** — dynamic re-planning from prior successes  
-- **Confidence calibration** — Bayesian-style weighting of learned strategies  
-- **Synthetic memory consolidation** — episodic, semantic, and procedural layers  
-- **Causal introspection** — automatic architecture diagram + fitness scoring  
-- **Transparent logging** — auditable reasoning and outcome traceability  
-
----
-
-## 🧭 Status
-**RIK v5.0** represents the **baseline stable release**:
-- ✅ All subsystems integrated  
-- ✅ Recursive feedback loop validated  
-- ✅ Learning reports generated  
-- 🚧 Next: Phase 4 commercialization and open research collaboration
-
----
-
-## 🧰 Using the RIK SDK
-
-Once the Recursive Intelligence Kernel API is running (see `/rik_api.py`), developers can connect programmatically using the lightweight RIK SDK.
-
-### Installation
 ```bash
-pip install rik-sdk
+# Start the RIA API server
+uvicorn rik_api:app --reload
 
-Example Usage
+# In another terminal, run a task
+curl -X POST http://localhost:8000/run_task \
+  -H "Content-Type: application/json" \
+  -d '{"task_description": "Analyze and improve"}'
+```
 
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  META-CONTROLLER                     │
+│         (Evaluates fitness, manages rollback)        │
+└─────────────────────┬───────────────────────────────┘
+                      │
+        ┌─────────────┼─────────────┐
+        ▼             ▼             ▼
+┌───────────┐  ┌───────────┐  ┌───────────┐
+│ REASONING │  │  MEMORY   │  │ EXECUTION │
+│  ENGINE   │  │  SYSTEMS  │  │   LAYER   │
+└─────┬─────┘  └─────┬─────┘  └─────┬─────┘
+      │              │              │
+      └──────────────┼──────────────┘
+                     ▼
+           ┌─────────────────┐
+           │ FALLBACK SYSTEM │
+           │  (Self-healing) │
+           └─────────────────┘
+```
+
+### Core Modules
+
+| Module | Purpose |
+|--------|---------|
+| `config.py` | Centralized configuration and logging |
+| `db.py` | SQLite connection pooling and management |
+| `memory.py` | Episodic, semantic, and procedural memory |
+| `reasoning.py` | Task validation, abstraction, planning |
+| `meta.py` | Fitness evaluation, rollback, architecture |
+| `execution.py` | Concurrent execution with locks |
+| `rik_api.py` | FastAPI REST endpoints |
+
+---
+
+## Demo Suite
+
+We've built **11 demos** proving RIA works across domains:
+
+### Core Concepts
+| Demo | What It Shows | Run Command |
+|------|---------------|-------------|
+| **Maze Solver** | Strategy evolution for pathfinding | `python demos/self_evolving_maze_solver.py --auto` |
+| **Snake Game** | Agent learns to play snake | `python demos/snake_evolution.py --auto` |
+| **Meta-Evolving Agent** | Agent rewrites its own architecture | `python demos/meta_evolving_agent.py --auto` |
+
+### Self-Healing Systems
+| Demo | What It Shows | Run Command |
+|------|---------------|-------------|
+| **Adaptive Scraper** | Web scraper survives site changes | `python demos/adaptive_scraper.py --auto` |
+| **Self-Healing RPA** | UI automation survives redesigns | `python demos/self_healing_rpa.py --auto` |
+
+### Autonomous Code Evolution
+| Demo | What It Shows | Run Command |
+|------|---------------|-------------|
+| **Self-Debugging Agent** | Finds and fixes code bugs | `python demos/self_debugging_agent.py --auto` |
+| **Autonomous Bug Fixer** | Repairs failing tests | `python demos/autonomous_bugfixer.py --auto` |
+| **Self-Evolving Repo** | Codebase improves itself | `python demos/self_evolving_repo.py --auto` |
+
+### Multi-Agent Systems
+| Demo | What It Shows | Run Command |
+|------|---------------|-------------|
+| **Adversarial Evolution** | Two agents strengthen each other | `python demos/adversarial_evolution.py --auto` |
+| **Multi-Agent Co-Design** | 4 agents collaborate on a system | `python demos/multi_agent_codesign.py --auto` |
+| **Recursive Self-Replication** | Agent creates improved copies of itself | `python demos/recursive_self_replication.py --auto` |
+
+---
+
+## SDK Usage
+
+```python
 from rik_sdk.client import RIKClient
 
+# Connect to RIA
 rik = RIKClient(base_url="http://127.0.0.1:8000")
 
-# Run a recursive reasoning task
-result = rik.run_task("Demonstrate recursive reflection")
-print(result)
+# Run a task
+result = rik.run_task("Optimize this process")
 
-# Check current system metrics
+# Get system metrics
 metrics = rik.get_metrics()
-print(metrics)
 
-# Retrieve recent memory entries
+# Query memory
 memory = rik.get_memory()
-print(memory)
-
-The SDK abstracts all API communication so developers can interact with the Recursive Intelligence Kernel as a local or remote service without writing any HTTP code.
+```
 
 ---
 
-## 🎥 Live AGI UI Navigator Demo
-Demonstrate semantic UI perception, action planning, and self-healing navigation without hardcoded selectors.
+## API Endpoints
 
-**Script**: `demos/live_agi_ui_navigator.py`
-
-**Prerequisites**
-- Python 3.8+
-- `pip install beautifulsoup4 requests`
-
-**Run with the bundled sample surface**
-```bash
-python3 demos/live_agi_ui_navigator.py
-```
-
-**Run against any URL with optional breakage injection**
-```bash
-python3 demos/live_agi_ui_navigator.py https://news.ycombinator.com/login --goal "log in" --no-break
-```
-
-**Advanced output controls**
-- Use `--format json` to emit the reasoning trace as structured JSON.
-- Add `--save trace.json` to persist the trace (respects the chosen format).
-- Pass a local HTML file path instead of a URL to evaluate offline surfaces.
-
-What you’ll see:
-- DOM perception → extracts buttons, form fields, and headings with semantic labels
-- Intent matching → ranks candidates for the goal (e.g., Login/Sign in/My Account)
-- Action chain → outlines the click + fill + validate plan
-- Self-healing → removes the primary trigger, rescans, and rebuilds the plan using synonyms
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/run_task` | POST | Execute a reasoning task |
+| `/metrics` | GET | Get system performance metrics |
+| `/memory` | GET | Query episodic memory |
+| `/fitness_history` | GET | Get fitness score history |
+| `/health` | GET | Health check |
 
 ---
 
-## 📚 Citation / Attribution
-If you use RIK in research or demonstrations, please cite:
+## Project Structure
 
-> *Recursive Intelligence Kernel (RIK) v5.0 — Erik Galardi (2025)*  
+```
+recursive-intelligence-kernel/
+├── config.py          # Configuration
+├── db.py              # Database management
+├── memory.py          # Memory systems
+├── reasoning.py       # Reasoning engine
+├── meta.py            # Meta-controller
+├── execution.py       # Execution layer
+├── rik_api.py         # REST API
+├── main.py            # Entry point
+│
+├── demos/             # 11 demonstration scripts
+│   ├── snake_evolution.py
+│   ├── multi_agent_codesign.py
+│   └── ...
+│
+├── rik_sdk/           # Python SDK
+│   └── client.py
+│
+├── rik_fail_safe/     # Fallback/recovery system
+│   └── fallback_core.py
+│
+└── data/
+    └── memory.db      # Persistent memory
+```
+
+---
+
+## Key Concepts
+
+### 1. Episodic Memory
+Every action is recorded with context and outcome:
+```python
+save_episode(
+    task="navigate_to_cart",
+    result="success",
+    reflection="Used CSS selector after ID failed"
+)
+```
+
+### 2. Strategy Evolution
+Agents maintain multiple strategies and evolve based on performance:
+```python
+strategies = ["basic", "advanced", "optimized"]
+# Agent evolves: basic (60%) → advanced (80%) → optimized (95%)
+```
+
+### 3. Fitness Evaluation
+Every run is scored on efficiency, robustness, and goal achievement:
+```python
+fitness = evaluate_fitness()
+# {"efficiency": 0.92, "robustness": 0.85, "score": 0.88}
+```
+
+### 4. Rollback & Recovery
+Failed experiments can be rolled back to last known good state:
+```python
+rollback_to_generation(gen_id=5)  # Restore generation 5
+```
+
+---
+
+## Requirements
+
+```
+Python 3.8+
+FastAPI
+uvicorn
+SQLite3
+scikit-learn
+numpy
+networkx
+beautifulsoup4 (for web demos)
+playwright (for RPA demos)
+```
+
+Install all:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Commercial Opportunities
+
+### Immediate Applications
+1. **Self-Healing RPA** - Automation that survives UI changes
+2. **Adaptive Web Scraping** - Scrapers that fix themselves
+3. **Autonomous Testing** - Tests that evolve with the codebase
+4. **Dynamic API Clients** - Clients that adapt to API changes
+
+### Enterprise Value
+- **Reduced maintenance** - Systems fix themselves
+- **Higher reliability** - Learning from every failure
+- **Faster adaptation** - No manual updates needed
+- **Continuous improvement** - Gets better over time
+
+### Integration Paths
+- **SaaS product** - Hosted RIA service
+- **SDK licensing** - Embed in existing products
+- **Consulting** - Custom RIA implementations
+- **Research partnerships** - Academic collaborations
+
+---
+
+## License
+
+MIT License © 2025 Erik Galardi
+
+---
+
+## Citation
+
+If you use RIA in research or products:
+
+> *Recursive Intelligence Algorithm (RIA) — Erik Galardi (2025)*
 > github.com/ErikG1776/recursive-intelligence-kernel
 
 ---
 
-## 🧩 License
-MIT License © 2025 Erik Galardi
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch
+3. Run tests: `python integration_test.py`
+4. Submit a PR
+
+---
+
+## Contact
+
+- GitHub: [@ErikG1776](https://github.com/ErikG1776)
+- Project: [recursive-intelligence-kernel](https://github.com/ErikG1776/recursive-intelligence-kernel)
