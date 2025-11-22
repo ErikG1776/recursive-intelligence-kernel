@@ -13,7 +13,8 @@ Core flow:
 5. Return structured results
 """
 
-from datetime import datetime
+import sys
+from datetime import datetime, timezone
 from meta import evaluate_fitness
 from memory import save_episode, retrieve_context, init_memory_db
 from reasoning import create_abstractions
@@ -31,7 +32,7 @@ def recursive_run(task: str):
     Executes the full recursive reasoning loop.
     """
     print(f"[RIK] Running recursive task: {task}")
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     # Ensure database is initialized
     init_memory_db()
@@ -108,6 +109,10 @@ def recursive_run(task: str):
 
 
 if __name__ == "__main__":
-    # Allow running this file directly for quick testing
-    test_task = "Demonstrate recursive reflection"
-    print(recursive_run(test_task))
+    # Accept task from command line or use default
+    if len(sys.argv) > 1:
+        task = " ".join(sys.argv[1:])
+    else:
+        task = "Demonstrate recursive reflection"
+
+    print(recursive_run(task))
