@@ -85,15 +85,15 @@ def decompose_task(task: str) -> Dict:
 # ==========================================================
 if __name__ == "__main__":
     test_tasks = [
-        "Analyze user onboarding workflow",
-        "Design reinforcement learning reward function",
-        "Explain the Taoist concept of Yin and Yang",
-        "Describe Kantian categorical imperative",
-        "Optimize inventory forecasting system",
-        "Build microservices API gateway",
-        "How do I cook a perfect steak?",
-        "Explain quantum entanglement",
-        "What is the meaning of life?"
+        "Extract invoice fields and validate against purchase order",
+        "Process insurance claim and check policy coverage",
+        "Validate customer onboarding documents",
+        "Reconcile payment transactions with bank statements",
+        "Route support ticket to appropriate department",
+        "Extract data from customs declaration form",
+        "Verify employee expense report compliance",
+        "Process loan application and credit check",
+        "Automate vendor invoice approval workflow"
     ]
 
     print("\n🧠 Semantic Task Embedding Test\n" + "="*50)
