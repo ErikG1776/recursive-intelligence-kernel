@@ -78,14 +78,38 @@ class MazeEnvironment:
         goal_x, goal_y = size - 2, size - 2
         maze[goal_y][goal_x] = self.GOAL
 
-        # Add extra walls based on difficulty
+        # Add extra walls based on difficulty (but ensure maze stays solvable)
         if difficulty > 1:
-            for _ in range(difficulty * 3):
+            for _ in range(difficulty * 2):
                 x, y = random.randint(2, size-3), random.randint(2, size-3)
-                if maze[y][x] == self.PATH and (x, y) != (1, 1):
+                if maze[y][x] == self.PATH and (x, y) != (1, 1) and (x, y) != (goal_x, goal_y):
+                    # Temporarily add wall
                     maze[y][x] = self.WALL
+                    # Check if still solvable
+                    if not self._is_solvable(maze, (1, 1), (goal_x, goal_y)):
+                        maze[y][x] = self.PATH  # Revert
 
         return maze
+
+    def _is_solvable(self, maze: list, start: tuple, goal: tuple) -> bool:
+        """Check if maze is solvable using BFS."""
+        from collections import deque
+        queue = deque([start])
+        visited = {start}
+
+        while queue:
+            x, y = queue.popleft()
+            if (x, y) == goal:
+                return True
+
+            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                nx, ny = x + dx, y + dy
+                if (0 <= nx < len(maze[0]) and 0 <= ny < len(maze) and
+                    maze[ny][nx] != self.WALL and (nx, ny) not in visited):
+                    visited.add((nx, ny))
+                    queue.append((nx, ny))
+
+        return False
 
     def _find_goal(self) -> tuple[int, int]:
         for y, row in enumerate(self.maze):
@@ -267,17 +291,18 @@ class BFSStrategy(Strategy):
 
     def __init__(self):
         self.path = []
-        self.path_index = 0
+        self.last_pos = None
 
     def choose_move(self, env: MazeEnvironment, memory: list) -> str:
-        # Recompute path if needed
-        if not self.path or self.path_index >= len(self.path):
+        # Recompute path if position changed unexpectedly or no path
+        if not self.path or env.agent_pos != self.last_pos:
             self.path = self._find_path(env)
-            self.path_index = 0
 
-        if self.path and self.path_index < len(self.path):
-            move = self.path[self.path_index]
-            self.path_index += 1
+        if self.path:
+            move = self.path.pop(0)
+            # Track expected position after move
+            dx, dy = {"UP": (0, -1), "DOWN": (0, 1), "LEFT": (-1, 0), "RIGHT": (1, 0)}[move]
+            self.last_pos = (env.agent_pos[0] + dx, env.agent_pos[1] + dy)
             return move
 
         # Fallback
