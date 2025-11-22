@@ -39,10 +39,9 @@ def recursive_run(task: str):
     init_memory_db()
 
     try:
-        # 1. Decompose task into domain-specific DAG
+        # 1. Decompose task and get embedding
         decomposition = decompose_task(task)
-        domain = decomposition["domain"]
-        sequence = decomposition["sequence"]
+        embedding = decomposition["embedding"]
 
         # 2. Retrieve context from prior episodes
         context = retrieve_context(task)
@@ -51,8 +50,7 @@ def recursive_run(task: str):
         # 3. Attempt to create abstractions from past episodes
         create_abstractions()
 
-        # 3. Simulate task execution (in real use, this would be actual work)
-        # For demonstration, we simulate potential failures
+        # 4. Simulate task execution (in real use, this would be actual work)
         task_success = True
         fallback_used = False
 
@@ -62,7 +60,7 @@ def recursive_run(task: str):
             try:
                 raise Exception(f"Simulated failure during task: {task}")
             except Exception as e:
-                # 4. Engage fallback system
+                # Engage fallback system
                 diag = diagnose(e, {"task": task})
                 strategies = generate_strategies(diag, context)
                 sims = simulate_counterfactuals(strategies, context)
@@ -80,8 +78,8 @@ def recursive_run(task: str):
         else:
             reflection = f"Task '{task}' failed after fallback attempts."
 
-        # 6. Save episode to memory (use sequence for meaningful clustering)
-        save_episode(sequence, "success" if task_success else "failure", reflection)
+        # 6. Save episode to memory
+        save_episode(task, "success" if task_success else "failure", reflection)
 
         # 7. Evaluate system-level performance
         fitness_score = evaluate_fitness()
@@ -89,7 +87,6 @@ def recursive_run(task: str):
         result = {
             "timestamp": timestamp,
             "task": task,
-            "domain": domain,
             "status": "success" if task_success else "failure",
             "reflection": reflection,
             "fitness_score": fitness_score,

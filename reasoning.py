@@ -13,8 +13,8 @@ from datetime import datetime
 import numpy as np
 from jsonschema import validate, ValidationError
 from sklearn.cluster import DBSCAN
-from sklearn.feature_extraction.text import TfidfVectorizer
 import networkx as nx
+from semantic_task_decomposer import embed_task
 
 
 # ==========================================================
@@ -81,31 +81,33 @@ def extract_sequences():
 
 
 def create_abstractions(sim_threshold: float = 0.7):
-    """Cluster similar primitive sequences and register new abstractions."""
-    sequences = extract_sequences()
-    if not sequences:
-        print("[ℹ️] No sequences found — add episodes first.")
+    """Cluster similar tasks using semantic embeddings."""
+    tasks = extract_sequences()
+    if not tasks or len(tasks) < 2:
+        print("[ℹ️] Need at least 2 episodes for clustering.")
         return
 
-    vectorizer = TfidfVectorizer(stop_words="english")
-    X = vectorizer.fit_transform(sequences)
+    # Embed all tasks
+    print("[🔄] Embedding tasks for clustering...")
+    embeddings = np.array([embed_task(t) for t in tasks])
 
-    clustering = DBSCAN(eps=0.3, min_samples=2, metric="cosine").fit(X)
+    # Cluster on embeddings (eps=0.5 for embedding space)
+    clustering = DBSCAN(eps=0.5, min_samples=2, metric="cosine").fit(embeddings)
     labels = clustering.labels_
 
     cluster_map = {}
-    for label, seq in zip(labels, sequences):
+    for label, task in zip(labels, tasks):
         if label == -1:
             continue
-        cluster_map.setdefault(label, []).append(seq)
+        cluster_map.setdefault(label, []).append(task)
 
     new_abstractions = []
-    for label, seqs in cluster_map.items():
-        joined = " | ".join(seqs)
-        if len(seqs) >= 2:
+    for label, task_list in cluster_map.items():
+        joined = " | ".join(task_list)
+        if len(task_list) >= 2:
             abstraction_name = f"abstract_{label}"
             new_abstractions.append({"name": abstraction_name, "definition": joined})
-            print(f"[🧩] Created abstraction → {abstraction_name}")
+            print(f"[🧩] Created abstraction → {abstraction_name} ({len(task_list)} tasks)")
 
     # Persist abstractions
     conn = sqlite3.connect(DB_PATH)
