@@ -316,6 +316,18 @@ def find_invoice_files(samples_dir: Path) -> List[Path]:
     return sorted(files)[:10]  # Limit to 10 for demo
 
 
+def generate_fallback_invoices():
+    """Generate sample invoices if none found."""
+    try:
+        # Import and run the generator from download script
+        from download_kaggle_invoices import create_sample_invoices
+        output_dir = SAMPLES_DIR / "real_invoices"
+        return create_sample_invoices(output_dir)
+    except Exception as e:
+        print(f"{Colors.RED}Could not generate sample invoices: {e}{Colors.RESET}")
+        return False
+
+
 def run_demo():
     """Run the OCR invoice processing demo."""
     print_banner()
@@ -323,19 +335,45 @@ def run_demo():
     print(f"\n{Colors.BOLD}Initializing RIK memory database...{Colors.RESET}")
     init_memory_db()
 
-    # Find invoice files
-    real_invoices_dir = SAMPLES_DIR / "real_invoices"
-    invoice_files = find_invoice_files(real_invoices_dir)
+    # Check for direct file path argument
+    invoice_files = []
+
+    if len(sys.argv) > 1:
+        # Direct file or folder path provided
+        input_path = Path(sys.argv[1])
+
+        if input_path.is_file() and input_path.suffix.lower() == '.pdf':
+            invoice_files = [input_path]
+            print(f"{Colors.GREEN}Processing single file: {input_path.name}{Colors.RESET}")
+        elif input_path.is_dir():
+            invoice_files = find_invoice_files(input_path)
+            print(f"{Colors.GREEN}Processing folder: {input_path}{Colors.RESET}")
+        else:
+            print(f"{Colors.RED}Invalid path: {input_path}{Colors.RESET}")
+            print("Usage: python demos/ocr_invoice_demo.py [path/to/invoice.pdf or path/to/folder]")
+            return
+    else:
+        # Find invoice files in default locations
+        real_invoices_dir = SAMPLES_DIR / "real_invoices"
+        invoice_files = find_invoice_files(real_invoices_dir)
+
+        if not invoice_files:
+            # Fall back to any PDFs in samples
+            invoice_files = find_invoice_files(SAMPLES_DIR)
 
     if not invoice_files:
-        # Fall back to any PDFs in samples
-        invoice_files = find_invoice_files(SAMPLES_DIR)
+        print(f"\n{Colors.YELLOW}No invoice PDFs found. Generating samples...{Colors.RESET}")
+
+        if generate_fallback_invoices():
+            real_invoices_dir = SAMPLES_DIR / "real_invoices"
+            invoice_files = find_invoice_files(real_invoices_dir)
 
     if not invoice_files:
         print(f"\n{Colors.RED}No invoice PDFs found!{Colors.RESET}")
-        print(f"\nTo download real invoices, run:")
-        print(f"  python demos/download_kaggle_invoices.py")
-        print(f"\nOr place PDF files in: {real_invoices_dir}")
+        print(f"\nOptions:")
+        print(f"  1. Provide a file path: python demos/ocr_invoice_demo.py /path/to/invoice.pdf")
+        print(f"  2. Generate samples: python demos/download_kaggle_invoices.py --generate")
+        print(f"  3. Place PDFs in: {SAMPLES_DIR / 'real_invoices'}")
         return
 
     print(f"\n{Colors.GREEN}Found {len(invoice_files)} invoice files{Colors.RESET}")
