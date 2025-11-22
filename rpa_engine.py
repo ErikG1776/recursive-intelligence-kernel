@@ -188,11 +188,20 @@ class SelfHealingLocator:
                 # Check if element exists
                 count = loc.count()
                 if count > 0:
-                    # Success! Record it
-                    strategy.record_success()
-                    self.last_successful_strategy = strategy.name
-                    print(f"    ✅ {strategy.name}({self.target}) → found!")
-                    return loc.first
+                    # Find a visible element (not hidden in accordion/glossary)
+                    for i in range(count):
+                        el = loc.nth(i)
+                        try:
+                            if el.is_visible():
+                                strategy.record_success()
+                                self.last_successful_strategy = strategy.name
+                                print(f"    ✅ {strategy.name}({self.target}) → found visible!")
+                                return el
+                        except:
+                            continue
+                    # No visible element found
+                    strategy.record_failure()
+                    print(f"    ❌ {strategy.name}({self.target}) → found but not visible")
                 else:
                     strategy.record_failure()
                     print(f"    ❌ {strategy.name}({self.target}) → no match")
