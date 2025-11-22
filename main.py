@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from meta import evaluate_fitness
 from memory import save_episode, retrieve_context, init_memory_db
 from reasoning import create_abstractions
+from semantic_task_decomposer import decompose_task
 from rik_fail_safe.fallback_core import (
     diagnose,
     generate_strategies,
@@ -38,11 +39,16 @@ def recursive_run(task: str):
     init_memory_db()
 
     try:
-        # 1. Retrieve context from prior episodes
+        # 1. Decompose task into domain-specific DAG
+        decomposition = decompose_task(task)
+        domain = decomposition["domain"]
+        sequence = decomposition["sequence"]
+
+        # 2. Retrieve context from prior episodes
         context = retrieve_context(task)
         print(f"[RIK] Retrieved context: {context}")
 
-        # 2. Attempt to create abstractions from past episodes
+        # 3. Attempt to create abstractions from past episodes
         create_abstractions()
 
         # 3. Simulate task execution (in real use, this would be actual work)
@@ -74,8 +80,8 @@ def recursive_run(task: str):
         else:
             reflection = f"Task '{task}' failed after fallback attempts."
 
-        # 6. Save episode to memory
-        save_episode(task, "success" if task_success else "failure", reflection)
+        # 6. Save episode to memory (use sequence for meaningful clustering)
+        save_episode(sequence, "success" if task_success else "failure", reflection)
 
         # 7. Evaluate system-level performance
         fitness_score = evaluate_fitness()
@@ -83,6 +89,7 @@ def recursive_run(task: str):
         result = {
             "timestamp": timestamp,
             "task": task,
+            "domain": domain,
             "status": "success" if task_success else "failure",
             "reflection": reflection,
             "fitness_score": fitness_score,
