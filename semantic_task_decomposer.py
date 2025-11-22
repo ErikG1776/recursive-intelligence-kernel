@@ -3,65 +3,66 @@ semantic_task_decomposer.py | RIK v5.0
 ------------------------------------------------------------
 Parses natural language tasks and generates domain-specific
 reasoning DAGs, enabling meaningful abstraction clustering.
+
+Uses sentence-transformers for semantic domain classification
+instead of keyword matching.
 """
 
-import re
-from typing import Dict, List, Tuple
+import numpy as np
+from typing import Dict, Tuple
 
-# Domain keyword mappings for classification
-DOMAIN_KEYWORDS = {
-    "business": [
-        "workflow", "onboarding", "customer", "sales", "revenue", "marketing",
-        "employee", "process", "pipeline", "crm", "erp", "invoice", "billing",
-        "stakeholder", "roi", "kpi", "metric", "dashboard"
-    ],
-    "technical": [
-        "api", "database", "server", "deploy", "code", "function", "class",
-        "microservice", "container", "docker", "kubernetes", "ci/cd", "git",
-        "endpoint", "authentication", "backend", "frontend", "integration"
-    ],
-    "optimization": [
-        "optimize", "improve", "enhance", "efficiency", "performance", "speed",
-        "reduce", "minimize", "maximize", "throughput", "latency", "cost",
-        "resource", "allocation", "scheduling", "forecast", "predict"
-    ],
-    "analysis": [
-        "analyze", "examine", "investigate", "study", "research", "evaluate",
-        "assess", "review", "audit", "compare", "benchmark", "measure",
-        "diagnose", "identify", "detect", "fraud", "anomaly", "pattern"
-    ],
-    "ml_ai": [
-        "learning", "neural", "model", "training", "inference", "reinforcement",
-        "reward", "agent", "classifier", "regression", "clustering", "embedding",
-        "transformer", "attention", "gradient", "backprop", "loss", "accuracy"
-    ],
-    "philosophy": [
-        "meaning", "metaphor", "existence", "consciousness", "ethics",
-        "truth", "beauty", "wisdom", "mind", "being",
-        "philosophy", "epistemology", "ontology", "phenomenology", "logic",
-        "reason", "argument", "dialectic", "socratic", "platonic", "aristotle"
-    ],
-    "spirituality": [
-        "spiritual", "soul", "tao", "taoist", "taoism", "yin", "yang", "zen",
-        "buddhist", "buddhism", "meditation", "enlightenment", "karma", "dharma",
-        "chakra", "qi", "chi", "prana", "kundalini", "mantra", "sutra",
-        "kabbalah", "sephiroth", "mysticism", "mystic", "esoteric", "hermetic",
-        "alchemy", "sacred", "divine", "transcendence", "nirvana", "satori",
-        "advaita", "vedanta", "upanishad", "gnostic", "symbolic", "archetype"
-    ],
-    "design": [
-        "design", "architect", "structure", "blueprint", "schema", "layout",
-        "interface", "ux", "ui", "prototype", "wireframe", "component",
-        "pattern", "template", "framework", "specification"
-    ],
-    "data": [
-        "data", "etl", "pipeline", "warehouse", "lake", "transform", "ingest",
-        "stream", "batch", "query", "sql", "nosql", "schema", "table",
-        "column", "row", "index", "partition", "aggregation"
-    ]
+# Lazy load sentence-transformers to avoid slow startup
+_model = None
+_domain_embeddings = None
+
+def _get_model():
+    """Lazy load the sentence transformer model."""
+    global _model
+    if _model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            print("[🔄] Loading embedding model (first run only)...")
+            _model = SentenceTransformer('all-MiniLM-L6-v2')
+            print("[✅] Embedding model loaded")
+        except ImportError:
+            raise ImportError(
+                "sentence-transformers required. Install with: "
+                "pip install sentence-transformers"
+            )
+    return _model
+
+# Rich domain descriptions for semantic matching
+DOMAIN_DESCRIPTIONS = {
+    "business": "Business processes, workflows, customer onboarding, sales pipelines, marketing campaigns, employee management, CRM systems, invoicing, billing, stakeholder management, KPIs, ROI metrics, and enterprise operations",
+
+    "technical": "Software development, API design, database management, server deployment, microservices architecture, containerization with Docker and Kubernetes, CI/CD pipelines, version control with Git, authentication systems, backend and frontend integration",
+
+    "optimization": "Performance optimization, efficiency improvement, resource allocation, cost reduction, throughput maximization, latency minimization, scheduling algorithms, demand forecasting, predictive analytics, and system tuning",
+
+    "analysis": "Data analysis, pattern detection, anomaly identification, fraud detection, research investigation, audit review, benchmarking, measurement, diagnostic assessment, and comparative evaluation",
+
+    "ml_ai": "Machine learning, deep learning, neural networks, model training, reinforcement learning, reward functions, classification, regression, clustering, embeddings, transformers, attention mechanisms, gradient descent, hyperparameter tuning, and AI agent development",
+
+    "philosophy": "Western philosophy, epistemology, ontology, phenomenology, ethics, logic, rational argumentation, dialectic reasoning, Socratic method, Platonic ideals, Aristotelian logic, existentialism, and analytical philosophy",
+
+    "spirituality": "Eastern spirituality, Taoism, Yin and Yang, Zen Buddhism, meditation, enlightenment, karma, dharma, chakras, qi energy, Kabbalah, Tree of Life, mysticism, esoteric traditions, Hermeticism, alchemy, sacred geometry, transcendence, nirvana, Advaita Vedanta, and archetypal symbolism",
+
+    "design": "System architecture, software design, UX/UI design, prototyping, wireframing, component design, design patterns, blueprints, technical specifications, interface layout, and framework architecture",
+
+    "data": "Data engineering, ETL pipelines, data warehousing, data lakes, stream processing, batch processing, SQL and NoSQL databases, schema design, data transformation, data quality, and data ingestion"
 }
 
-# Domain-specific primitive sequences
+def _get_domain_embeddings():
+    """Compute and cache domain description embeddings."""
+    global _domain_embeddings
+    if _domain_embeddings is None:
+        model = _get_model()
+        _domain_embeddings = {}
+        for domain, description in DOMAIN_DESCRIPTIONS.items():
+            _domain_embeddings[domain] = model.encode(description)
+    return _domain_embeddings
+
+# Domain-specific primitive sequences (DAG templates)
 DOMAIN_DAG_TEMPLATES = {
     "business": {
         "nodes": [
@@ -210,25 +211,32 @@ DOMAIN_DAG_TEMPLATES = {
 
 def classify_domain(task: str) -> Tuple[str, float]:
     """
-    Classify task into a domain based on keyword matching.
+    Classify task into a domain using semantic embeddings.
     Returns (domain_name, confidence_score).
     """
-    task_lower = task.lower()
-    scores = {}
+    model = _get_model()
+    domain_embeddings = _get_domain_embeddings()
 
-    for domain, keywords in DOMAIN_KEYWORDS.items():
-        score = sum(1 for kw in keywords if kw in task_lower)
-        if score > 0:
-            scores[domain] = score
+    # Encode the task
+    task_embedding = model.encode(task)
 
-    if not scores:
-        return ("general", 0.0)
+    # Compute cosine similarity with each domain
+    similarities = {}
+    for domain, domain_emb in domain_embeddings.items():
+        # Cosine similarity
+        similarity = np.dot(task_embedding, domain_emb) / (
+            np.linalg.norm(task_embedding) * np.linalg.norm(domain_emb)
+        )
+        similarities[domain] = float(similarity)
 
-    best_domain = max(scores, key=scores.get)
-    # Normalize confidence: score / max possible (assume 3+ keywords = high confidence)
-    confidence = min(scores[best_domain] / 3.0, 1.0)
+    # Find best match
+    best_domain = max(similarities, key=similarities.get)
+    confidence = similarities[best_domain]
 
-    return (best_domain, round(confidence, 2))
+    # Normalize confidence to 0-1 range (similarities typically 0.2-0.8)
+    normalized_confidence = min(max((confidence - 0.2) / 0.6, 0.0), 1.0)
+
+    return (best_domain, round(normalized_confidence, 2))
 
 
 def decompose_task(task: str) -> Dict:
@@ -248,7 +256,6 @@ def decompose_task(task: str) -> Dict:
     dag = DOMAIN_DAG_TEMPLATES.get(domain, DOMAIN_DAG_TEMPLATES["general"])
 
     # Create flattened sequence for abstraction clustering
-    # This is what gets stored and clustered
     primitives = [node["primitive"] for node in dag["nodes"]]
     params = [str(node.get("params", {})) for node in dag["nodes"]]
     sequence = f"{domain}:{'-'.join(primitives)}:{'-'.join(params)}"
@@ -297,10 +304,13 @@ if __name__ == "__main__":
         "Build microservices API gateway",
         "Analyze fraud detection patterns",
         "Create ETL pipeline for customer data",
-        "Explore the Kabbalistic Tree of Life symbolism"
+        "Explore the Kabbalistic Tree of Life symbolism",
+        "What is the meaning of Nietzsche's eternal return?",
+        "How do I cook a perfect steak?",
+        "Explain quantum entanglement"
     ]
 
-    print("\n🧠 Semantic Task Decomposition Test\n" + "="*50)
+    print("\n🧠 Semantic Task Decomposition Test (Embedding-based)\n" + "="*50)
 
     for task in test_tasks:
         print(f"\nTask: {task}")
