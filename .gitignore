@@ -6,3 +6,5 @@ __pycache__/
 demos/generated_*.py
 data/*.db
 demos/temp_site/
+demos/generated_*.py
+demos/code_under_test.py
