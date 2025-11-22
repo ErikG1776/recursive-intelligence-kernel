@@ -10,3 +10,4 @@ demos/generated_*.py
 demos/code_under_test.py
 demos/attacker_code.py
 demos/defender_code.py
+demos/fixer_strategy.py
