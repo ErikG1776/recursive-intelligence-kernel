@@ -1,0 +1,83 @@
+
+████████████████████████████████████████████████████████████
+  RIK Performance Benchmark Suite
+  2025-11-01 12:30:01
+████████████████████████████████████████████████████████████
+
+Configuration:
+  API URL: http://localhost:8000
+  Test requests: 100
+  Concurrent workers: 10
+  Warmup requests: 10
+
+✅ API is reachable, starting benchmarks...
+
+
+============================================================
+BENCHMARK 1: Health Endpoint (/health/live)
+============================================================
+Warmup: 10 requests...
+Testing: 100 requests...
+  Progress: 20/100
+  Progress: 40/100
+  Progress: 60/100
+  Progress: 80/100
+  Progress: 100/100
+
+📊 Results:
+  Total requests: 100
+  Success rate: 100.0%
+  Throughput: 843.4 req/sec
+
+  Latency (ms):
+    Min: 0.93
+    P50: 1.14
+    P95: 1.45
+    P99: 1.75
+    Max: 1.75
+    Mean: 1.17 ± 0.14
+
+============================================================
+BENCHMARK 2: Invoice Processing (/process_invoice)
+============================================================
+Warmup: 10 requests...
+Testing: 100 requests...
+  Progress: 20/100
+  Progress: 40/100
+  Progress: 60/100
+  Progress: 80/100
+  Progress: 100/100
+
+📊 Results:
+  Total requests: 100
+  Success rate: 90.0%
+  Throughput: 88.4 req/sec
+
+  Latency (ms):
+    Min: 11.07
+    P50: 11.91
+    P95: 13.12
+    P99: 34.51
+    Max: 34.51
+    Mean: 12.37 ± 2.71
+
+============================================================
+BENCHMARK 3: Concurrent Load
+Workers: 10
+============================================================
+  Progress: 20/100
+  Progress: 40/100
+  Progress: 60/100
+  Progress: 80/100
+  Progress: 100/100
+
+📊 Results:
+  Total requests: 100
+  Success rate: 0.0%
+  Throughput: 1462.8 req/sec
+  Concurrency: 10 workers
+
+  Latency (ms):
+
+
+❌ Benchmark failed: 'min'
