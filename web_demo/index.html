@@ -561,9 +561,9 @@
         let memories = [];
         let strategies = {
             'Random': { uses: 0, successes: 0, weight: 1.0 },
-            'Wall-follow': { uses: 0, successes: 0, weight: 0.1 },
-            'Greedy': { uses: 0, successes: 0, weight: 0.1 },
-            'A* Search': { uses: 0, successes: 0, weight: 0.1 }
+            'Wall-follow': { uses: 0, successes: 0, weight: 0.5 },
+            'Greedy': { uses: 0, successes: 0, weight: 0.5 },
+            'A* Search': { uses: 0, successes: 0, weight: 0.5 }
         };
         let currentStrategy = 'Random';
         let speed = 5;
@@ -825,8 +825,8 @@
                 return;
             }
 
-            // Check step limit
-            if (steps > 500) {
+            // Check step limit - fail fast to learn faster
+            if (steps > 200) {
                 await endRun(false);
                 return;
             }
@@ -891,12 +891,21 @@
 
             log('reason', `${currentStrategy} effectiveness: ${strategyRate}% (${strategies[currentStrategy].successes}/${strategies[currentStrategy].uses})`);
 
-            // Adapt strategy weights
+            // Adapt strategy weights - AGGRESSIVE learning
             if (success) {
-                strategies[currentStrategy].weight = Math.min(5, strategies[currentStrategy].weight * 1.2);
-                log('reflect', `Increasing ${currentStrategy} weight to ${strategies[currentStrategy].weight.toFixed(2)}`);
+                // Big boost for success
+                strategies[currentStrategy].weight = Math.min(10, strategies[currentStrategy].weight * 2.0);
+                log('reflect', `Boosting ${currentStrategy} weight to ${strategies[currentStrategy].weight.toFixed(2)}`);
+
+                // If this strategy is proven (3+ successes), make it dominant
+                if (strategies[currentStrategy].successes >= 3) {
+                    log('adapt', `${currentStrategy} is proven effective - prioritizing it`);
+                    strategies[currentStrategy].weight = 10;
+                }
             } else {
-                strategies[currentStrategy].weight = Math.max(0.1, strategies[currentStrategy].weight * 0.8);
+                // Harsh penalty for failure
+                strategies[currentStrategy].weight = Math.max(0.05, strategies[currentStrategy].weight * 0.3);
+                log('reflect', `Reducing ${currentStrategy} weight to ${strategies[currentStrategy].weight.toFixed(2)}`);
 
                 // Find best performing strategy
                 let bestStrategy = currentStrategy;
@@ -911,8 +920,8 @@
                     }
                 }
 
-                if (bestStrategy !== currentStrategy && strategies[bestStrategy].uses >= 2) {
-                    log('adapt', `Switching from ${currentStrategy} to ${bestStrategy} (${(bestRate * 100).toFixed(0)}% success rate)`);
+                if (bestStrategy !== currentStrategy && bestRate > 0) {
+                    log('adapt', `Learning: ${bestStrategy} works better (${(bestRate * 100).toFixed(0)}% vs ${strategyRate}%)`);
                 }
             }
 
@@ -972,9 +981,9 @@
             allSteps = [];
             strategies = {
                 'Random': { uses: 0, successes: 0, weight: 1.0 },
-                'Wall-follow': { uses: 0, successes: 0, weight: 0.1 },
-                'Greedy': { uses: 0, successes: 0, weight: 0.1 },
-                'A* Search': { uses: 0, successes: 0, weight: 0.1 }
+                'Wall-follow': { uses: 0, successes: 0, weight: 0.5 },
+                'Greedy': { uses: 0, successes: 0, weight: 0.5 },
+                'A* Search': { uses: 0, successes: 0, weight: 0.5 }
             };
 
             document.getElementById('startBtn').textContent = '▶ Start Learning';
